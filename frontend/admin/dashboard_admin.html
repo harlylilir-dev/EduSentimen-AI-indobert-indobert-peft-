@@ -2,113 +2,190 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Admin - EduSentiment</title>
-    <link rel="stylesheet" href="../assets/css/style_dashboard_admin.css">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .submenu {
+            transition: all 0.3s ease;
+        }
+    </style>
 </head>
-<body>
+<body class="bg-gray-100 font-sans">
 
 <!-- NAVBAR -->
-<div class="navbar">
-    <div class="nav-left">
-        <h2>Admin Panel</h2>
+<nav class="fixed top-0 left-0 w-full h-14 bg-gray-800 text-white flex items-center justify-between px-5 z-50">
+    <div class="text-xl font-bold">Admin Panel</div>
+    <div>
+        <a href="login_admin.html" class="bg-white text-gray-800 font-bold py-2 px-4 rounded-md hover:bg-gray-200 transition-colors">Logout</a>
     </div>
-    <div class="nav-right">
-        <a href="login_admin.html" class="btn-logout">Logout</a>
-    </div>
-</div>
+</nav>
 
 <!-- SIDEBAR -->
-<div class="sidebar">
-    <a href="dashboard_admin.html">Dashboard</a>
-    <a href="dataset_admin.html">Dataset</a>
-    <a href="preprocessing_admin.html">Pre-Processing</a>
+<aside class="fixed left-0 top-14 h-[calc(100vh-3.5rem)] w-56 bg-gray-700 text-white overflow-y-auto pt-2">
+    <a href="dashboard_admin.html" class="block py-3 px-5 hover:bg-teal-500 transition-colors">Dashboard</a>
+    <a href="dataset_admin.html" class="block py-3 px-5 hover:bg-teal-500 transition-colors">Dataset</a>
+    <a href="preprocessing_admin.html" class="block py-3 px-5 hover:bg-teal-500 transition-colors">Pre-Processing</a>
 
-    <div class="menu-item" onclick="toggleMenu('processMenu')">
-        Processing ▾
+    <div class="py-3 px-5 hover:bg-teal-500 transition-colors cursor-pointer flex items-center justify-between" onclick="toggleMenu('processMenu')">
+        <span>Processing</span>
+        <svg class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
     </div>
-    <div class="submenu" id="processMenu">
-        <a href="pengaturan_admin.html">Pengaturan</a>
-        <a href="pelatihanmodel_admin.html">Pelatihan Model</a>
+    <div class="submenu hidden bg-gray-600" id="processMenu">
+        <a href="pengaturan_admin.html" class="block py-2 pl-10 pr-5 hover:bg-teal-500 transition-colors text-sm">Pengaturan</a>
+        <a href="pelatihanmodel_admin.html" class="block py-2 pl-10 pr-5 hover:bg-teal-500 transition-colors text-sm">Pelatihan Model</a>
     </div>
 
-    <a href="testing_admin.html">Testing</a>
-    <a href="evaluasi_admin.html">Evaluasi</a>
-</div>
+    <a href="testing_admin.html" class="block py-3 px-5 hover:bg-teal-500 transition-colors">Testing</a>
+    <a href="evaluasi_admin.html" class="block py-3 px-5 hover:bg-teal-500 transition-colors">Evaluasi</a>
+</aside>
 
 <!-- CONTENT -->
-<div class="content">
-
-    <h1>Dashboard Admin</h1>
+<main class="ml-56 mt-14 p-6 min-h-screen">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Dashboard Admin</h1>
 
     <!-- RINGKASAN -->
-    <div class="card">
-        <h3>Ringkasan Data Public</h3>
-        <p>Total Data Masuk: <strong id="totalPublic">0</strong></p>
+    <div class="bg-white p-5 rounded-lg shadow-md mb-6">
+        <h3 class="text-lg font-semibold text-gray-700 mb-3">Ringkasan Data Public</h3>
+        <p class="mb-3">Total Data Masuk: <strong id="totalPublic" class="text-xl">0</strong></p>
 
-        <table>
+        <table class="w-full border-collapse mt-3">
             <thead>
                 <tr>
-                    <th>Nama File</th>
-                    <th>Jumlah Data</th>
-                    <th>Tanggal Upload</th>
+                    <th class="bg-gray-800 text-white p-2 text-sm">Nama File</th>
+                    <th class="bg-gray-800 text-white p-2 text-sm">Jumlah Data</th>
+                    <th class="bg-gray-800 text-white p-2 text-sm">Tanggal Upload</th>
                 </tr>
             </thead>
             <tbody id="tabelCSV">
                 <tr>
-                    <td colspan="3">Belum ada upload CSV</td>
+                    <td colspan="3" class="bg-gray-100 p-2 text-center">Belum ada upload CSV</td>
                 </tr>
             </tbody>
         </table>
     </div>
 
     <!-- TABEL DETAIL -->
-    <div class="card">
-        <h3>Riwayat Data dari Public</h3>
+    <div class="bg-white p-5 rounded-lg shadow-md mb-6">
+        <h3 class="text-lg font-semibold text-gray-700 mb-3">Riwayat Data dari Public</h3>
 
-        <table>
+        <table class="w-full border-collapse">
             <thead>
                 <tr>
-                    <th>No</th>
-                    <th>Kalimat</th>
-                    <th>Hasil Emosi</th>
-                    <th>Waktu</th>
+                    <th class="bg-gray-800 text-white p-2 text-sm">No</th>
+                    <th class="bg-gray-800 text-white p-2 text-sm">Kalimat</th>
+                    <th class="bg-gray-800 text-white p-2 text-sm">Hasil Emosi</th>
+                    <th class="bg-gray-800 text-white p-2 text-sm">Waktu</th>
                 </tr>
             </thead>
             <tbody id="tabelPublic">
                 <tr>
-                    <td colspan="4">Belum ada data dari public</td>
+                    <td colspan="4" class="bg-gray-100 p-2 text-center">Belum ada data dari public</td>
                 </tr>
             </tbody>
         </table>
     </div>
 
-    <!-- STATUS -->
-    <div class="card">
-        <h3>Status Sistem</h3>
-        <p>Status Training: Tidak berjalan</p>
-        <p id="lastTrain">Model Terakhir Dilatih: -</p>
+    <!-- GRAFIK DISTRIBUSI EMOSI -->
+    <div class="bg-white p-5 rounded-lg shadow-md mb-6">
+        <h3 class="text-lg font-semibold text-gray-700 mb-3">Distribusi Emosi (Data Public)</h3>
+        <canvas id="emotionChart" height="80"></canvas>
     </div>
 
-</div>
+    <!-- STATUS -->
+    <div class="bg-white p-5 rounded-lg shadow-md mb-6">
+        <h3 class="text-lg font-semibold text-gray-700 mb-3">Status Sistem</h3>
+        <p>Status Training: <span class="font-medium text-red-600">Tidak berjalan</span></p>
+        <p id="lastTrain" class="mt-1">Model Terakhir Dilatih: <span class="text-gray-500">-</span></p>
+    </div>
+</main>
 
-<!-- SCRIPT -->
 <script>
-
-/* SIDEBAR */
+/* ====== SIDEBAR TOGGLE ====== */
 function toggleMenu(menuId) {
-    const menus = document.querySelectorAll('.submenu');
-
-    menus.forEach(menu => {
+    const submenus = document.querySelectorAll('.submenu');
+    submenus.forEach(menu => {
         if (menu.id !== menuId) {
-            menu.style.display = "none";
+            menu.classList.add('hidden');
         }
     });
-
     const current = document.getElementById(menuId);
-    current.style.display = (current.style.display === "block") ? "none" : "block";
+    current.classList.toggle('hidden');
 }
 
-/* LOAD DATA */
+// Variabel untuk menyimpan instance Chart.js
+let emotionChartInstance = null;
+
+// Daftar 7 emosi (sesuai ketentuan)
+const EMOTIONS = ['senang', 'percaya', 'terkejut', 'netral', 'takut', 'sedih', 'marah'];
+
+/* ====== RENDER GRAFIK ====== */
+function renderEmotionChart(dataPublic) {
+    const ctx = document.getElementById('emotionChart').getContext('2d');
+
+    // Hancurkan grafik sebelumnya jika ada
+    if (emotionChartInstance) {
+        emotionChartInstance.destroy();
+    }
+
+    // Hitung frekuensi setiap emosi (case-insensitive)
+    const counts = EMOTIONS.map(emo => 
+        dataPublic.filter(item => item.emosi && item.emosi.toLowerCase() === emo).length
+    );
+
+    // Warna batang (bisa disesuaikan)
+    const colors = [
+        '#facc15', // senang (kuning)
+        '#3b82f6', // percaya (biru)
+        '#f97316', // terkejut (oranye)
+        '#9ca3af', // netral (abu-abu)
+        '#a855f7', // takut (ungu)
+        '#14b8a6', // sedih (teal)
+        '#ef4444'  // marah (merah)
+    ];
+
+    emotionChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: EMOTIONS.map(e => e.charAt(0).toUpperCase() + e.slice(1)), // Kapitalkan
+            datasets: [{
+                label: 'Jumlah',
+                data: counts,
+                backgroundColor: colors,
+                borderRadius: 6,
+                barPercentage: 0.7,
+                categoryPercentage: 0.8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => `${ctx.raw} komentar`
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#e5e7eb' },
+                    ticks: { stepSize: 1 }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+}
+
+/* ====== LOAD DATA ====== */
 function loadPublicData() {
     let data = JSON.parse(localStorage.getItem("dataPublic")) || [];
     let csv = JSON.parse(localStorage.getItem("dataCSV")) || [];
@@ -119,45 +196,47 @@ function loadPublicData() {
 
     total.innerHTML = data.length;
 
-    // RESET
+    // Reset tabel
     table.innerHTML = "";
     tableCSV.innerHTML = "";
 
-    // DATA KALIMAT
+    // Data kalimat
     if (data.length === 0) {
-        table.innerHTML = `<tr><td colspan="4">Belum ada data dari public</td></tr>`;
+        table.innerHTML = `<tr><td colspan="4" class="bg-gray-100 p-2 text-center">Belum ada data dari public</td></tr>`;
     } else {
         data.forEach((item, index) => {
             table.innerHTML += `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${item.kalimat || "-"}</td>
-                    <td>${item.emosi || "-"}</td>
-                    <td>${item.waktu || "-"}</td>
+                <tr class="even:bg-gray-50">
+                    <td class="p-2 text-center">${index + 1}</td>
+                    <td class="p-2 text-center">${item.kalimat || "-"}</td>
+                    <td class="p-2 text-center">${item.emosi || "-"}</td>
+                    <td class="p-2 text-center">${item.waktu || "-"}</td>
                 </tr>
             `;
         });
     }
 
-    // DATA CSV
+    // Data CSV
     if (csv.length === 0) {
-        tableCSV.innerHTML = `<tr><td colspan="3">Belum ada upload CSV</td></tr>`;
+        tableCSV.innerHTML = `<tr><td colspan="3" class="bg-gray-100 p-2 text-center">Belum ada upload CSV</td></tr>`;
     } else {
         csv.forEach(item => {
             tableCSV.innerHTML += `
-                <tr>
-                    <td>${item.nama}</td>
-                    <td>${item.jumlah}</td>
-                    <td>${item.tanggal}</td>
+                <tr class="even:bg-gray-50">
+                    <td class="p-2 text-center">${item.nama}</td>
+                    <td class="p-2 text-center">${item.jumlah}</td>
+                    <td class="p-2 text-center">${item.tanggal}</td>
                 </tr>
             `;
         });
     }
+
+    // Render grafik distribusi emosi berdasarkan data yang ada
+    renderEmotionChart(data);
 }
 
-/* INIT */
+// Load data saat halaman dimuat
 document.addEventListener("DOMContentLoaded", loadPublicData);
-
 </script>
 
 </body>

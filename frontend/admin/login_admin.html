@@ -5,16 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - EduSentiment AI</title>
     <link rel="stylesheet" href="../assets/css/style_login_admin.css">
+    <style>
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 8px;
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <div class="login-box">
             <img src="../assets/images/logoppl.jpg" alt="Logo" class="logo">
             <h2>Masuk Sebagai Admin</h2>
-            <form>
+            <form id="loginForm">
                 <div class="input-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" placeholder="Masukkan email" required>
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="Masukkan username" required>
                 </div>
 
                 <div class="input-group">
@@ -22,9 +30,34 @@
                     <input type="password" id="password" placeholder="Masukkan password" required>
                 </div>
 
+                <div class="error-message" id="errorMsg">Username atau password salah</div>
+
                 <button type="submit" class="btn-login">Login</button>
             </form>
         </div>
     </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // cegah reload halaman
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+
+            // Cek kredensial
+            if (username === 'sangbintang' && password === '1234') {
+                // Berhasil login
+                errorMsg.style.display = 'none';
+                // Arahkan ke dashboard admin (pastikan path benar)
+                window.location.href = 'dashboard_admin.html';
+            } else {
+                // Tampilkan pesan error
+                errorMsg.style.display = 'block';
+                // Opsional: kosongkan password
+                document.getElementById('password').value = '';
+            }
+        });
+    </script>
 </body>
 </html>
