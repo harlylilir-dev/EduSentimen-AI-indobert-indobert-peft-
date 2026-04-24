@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Admin - EduSentiment</title>
+    <link rel="stylesheet" href="../assets/css/style_dashboard_admin.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="nav-left">
+        <h2>Admin Panel</h2>
+    </div>
+    <div class="nav-right">
+        <a href="login_admin.html" class="btn-logout">Logout</a>
+    </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <a href="dashboard_admin.html">Dashboard</a>
+    <a href="dataset_admin.html">Dataset</a>
+    <a href="preprocessing_admin.html">Pre-Processing</a>
+
+    <div class="menu-item" onclick="toggleMenu('processMenu')">
+        Processing ▾
+    </div>
+    <div class="submenu" id="processMenu">
+        <a href="pengaturan_admin.html">Pengaturan</a>
+        <a href="pelatihanmodel_admin.html">Pelatihan Model</a>
+    </div>
+
+    <a href="testing_admin.html">Testing</a>
+    <a href="evaluasi_admin.html">Evaluasi</a>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+    <h1>Dashboard Admin</h1>
+
+    <!-- RINGKASAN -->
+    <div class="card">
+        <h3>Ringkasan Data Public</h3>
+        <p>Total Data Masuk: <strong id="totalPublic">0</strong></p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Nama File</th>
+                    <th>Jumlah Data</th>
+                    <th>Tanggal Upload</th>
+                </tr>
+            </thead>
+            <tbody id="tabelCSV">
+                <tr>
+                    <td colspan="3">Belum ada upload CSV</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- TABEL DETAIL -->
+    <div class="card">
+        <h3>Riwayat Data dari Public</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Kalimat</th>
+                    <th>Hasil Emosi</th>
+                    <th>Waktu</th>
+                </tr>
+            </thead>
+            <tbody id="tabelPublic">
+                <tr>
+                    <td colspan="4">Belum ada data dari public</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- STATUS -->
+    <div class="card">
+        <h3>Status Sistem</h3>
+        <p>Status Training: Tidak berjalan</p>
+        <p id="lastTrain">Model Terakhir Dilatih: -</p>
+    </div>
+
+</div>
+
+<!-- SCRIPT -->
+<script>
+
+/* SIDEBAR */
+function toggleMenu(menuId) {
+    const menus = document.querySelectorAll('.submenu');
+
+    menus.forEach(menu => {
+        if (menu.id !== menuId) {
+            menu.style.display = "none";
+        }
+    });
+
+    const current = document.getElementById(menuId);
+    current.style.display = (current.style.display === "block") ? "none" : "block";
+}
+
+/* LOAD DATA */
+function loadPublicData() {
+    let data = JSON.parse(localStorage.getItem("dataPublic")) || [];
+    let csv = JSON.parse(localStorage.getItem("dataCSV")) || [];
+
+    let table = document.getElementById("tabelPublic");
+    let total = document.getElementById("totalPublic");
+    let tableCSV = document.getElementById("tabelCSV");
+
+    total.innerHTML = data.length;
+
+    // RESET
+    table.innerHTML = "";
+    tableCSV.innerHTML = "";
+
+    // DATA KALIMAT
+    if (data.length === 0) {
+        table.innerHTML = `<tr><td colspan="4">Belum ada data dari public</td></tr>`;
+    } else {
+        data.forEach((item, index) => {
+            table.innerHTML += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${item.kalimat || "-"}</td>
+                    <td>${item.emosi || "-"}</td>
+                    <td>${item.waktu || "-"}</td>
+                </tr>
+            `;
+        });
+    }
+
+    // DATA CSV
+    if (csv.length === 0) {
+        tableCSV.innerHTML = `<tr><td colspan="3">Belum ada upload CSV</td></tr>`;
+    } else {
+        csv.forEach(item => {
+            tableCSV.innerHTML += `
+                <tr>
+                    <td>${item.nama}</td>
+                    <td>${item.jumlah}</td>
+                    <td>${item.tanggal}</td>
+                </tr>
+            `;
+        });
+    }
+}
+
+/* INIT */
+document.addEventListener("DOMContentLoaded", loadPublicData);
+
+</script>
+
+</body>
+</html>

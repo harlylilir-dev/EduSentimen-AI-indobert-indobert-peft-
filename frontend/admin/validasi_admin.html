@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Validasi Hasil Pelatihan</title>
+    <link rel="stylesheet" href="../assets/css/style_pelatihanmodel_admin.css">
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="nav-left">
+        <h2>Admin Panel</h2>
+    </div>
+    <div class="nav-right">
+        <a href="login_admin.html" class="btn-logout">Logout</a>
+    </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <a href="dashboard_admin.html">Dashboard</a>
+    <a href="dataset_admin.html">Dataset</a>
+    <a href="preprocessing_admin.html">Pre-Processing</a>
+
+    <div class="menu-item" onclick="toggleMenu('processMenu')">Processing ▾</div>
+    <div class="submenu" style="display:block;">
+        <a href="pengaturan_admin.html">Pengaturan</a>
+        <a href="pelatihanmodel_admin.html" class="active">Pelatihan Model</a>
+    </div>
+
+    <a href="testing_admin.html">Testing</a>
+    <a href="evaluasi_admin.html">Evaluasi</a>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+    <h1>Validasi Hasil Pelatihan</h1>
+
+    <!-- DATA -->
+    <div class="card">
+        <h3>Data yang Telah Dilatih</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Nama File</th>
+                    <th>Model yang Dipakai</th>
+                </tr>
+            </thead>
+            <tbody id="dataValidasi"></tbody>
+        </table>
+    </div>
+
+    <!-- CONFUSION MATRIX INDO BERT -->
+    <div class="card">
+        <h3>Confusion Matrix - IndoBERT</h3>
+
+        <table>
+            <tr>
+                <th></th>
+                <th>Senang</th>
+                <th>Terkejut</th>
+                <th>Netral</th>
+                <th>Takut</th>
+                <th>Kecewa</th>
+                <th>Sedih</th>
+                <th>Marah</th>
+            </tr>
+
+            <!-- contoh data -->
+            <tr><th>Senang</th><td>12</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+            <tr><th>Terkejut</th><td>0</td><td>10</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+            <tr><th>Netral</th><td>1</td><td>0</td><td>15</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+            <tr><th>Takut</th><td>0</td><td>0</td><td>1</td><td>8</td><td>0</td><td>1</td><td>0</td></tr>
+            <tr><th>Kecewa</th><td>0</td><td>0</td><td>1</td><td>0</td><td>9</td><td>1</td><td>0</td></tr>
+            <tr><th>Sedih</th><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td><td>11</td><td>0</td></tr>
+            <tr><th>Marah</th><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>10</td></tr>
+        </table>
+    </div>
+
+    <!-- CONFUSION MATRIX PEFT -->
+    <div class="card">
+        <h3>Confusion Matrix - IndoBERT + PEFT</h3>
+
+        <table>
+            <tr>
+                <th></th>
+                <th>Senang</th>
+                <th>Terkejut</th>
+                <th>Netral</th>
+                <th>Takut</th>
+                <th>Kecewa</th>
+                <th>Sedih</th>
+                <th>Marah</th>
+            </tr>
+
+            <!-- contoh data lebih bagus -->
+            <tr><th>Senang</th><td>14</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+            <tr><th>Terkejut</th><td>0</td><td>11</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+            <tr><th>Netral</th><td>0</td><td>0</td><td>16</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+            <tr><th>Takut</th><td>0</td><td>0</td><td>0</td><td>9</td><td>0</td><td>0</td><td>0</td></tr>
+            <tr><th>Kecewa</th><td>0</td><td>0</td><td>0</td><td>0</td><td>10</td><td>0</td><td>0</td></tr>
+            <tr><th>Sedih</th><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>12</td><td>0</td></tr>
+            <tr><th>Marah</th><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>11</td></tr>
+        </table>
+    </div>
+
+</div>
+
+<script>
+
+/* LOAD DATA DARI HALAMAN TRAINING */
+function loadValidasi() {
+    let file = localStorage.getItem("fileValidasi");
+    let data = JSON.parse(localStorage.getItem("hasilTraining")) || [];
+
+    let table = document.getElementById("dataValidasi");
+
+    let found = data.find(d => d.file === file);
+
+    if (!found) return;
+
+    let modelText = found.model === "indobert_peft"
+        ? "IndoBERT + PEFT"
+        : "IndoBERT + PEFT";
+
+    table.innerHTML = `
+        <tr>
+            <td>${found.file}</td>
+            <td>${modelText}</td>
+        </tr>
+    `;
+}
+
+loadValidasi();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Preprocessing - EduSentiment</title>
+    <link rel="stylesheet" href="../assets/css/style_preprocessing_admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<div class="navbar">
+    <div class="nav-left">
+        <h2>Admin Panel</h2>
+    </div>
+    <div class="nav-right">
+        <a href="login_admin.html" class="btn-logout">Logout</a>
+    </div>
+</div>
+
+<div class="sidebar">
+    <a href="dashboard_admin.html">Dashboard</a>
+    <a href="dataset_admin.html">Dataset</a>
+    <a href="preprocessing_admin.html">Pre-Processing</a>
+
+    <div class="menu-item" onclick="toggleMenu('processMenu')">Processing ▾</div>
+    <div class="submenu" id="processMenu">
+        <a href="pengaturan_admin.html">Pengaturan</a>
+        <a href="pelatihanmodel_admin.html">Pelatihan Model</a>
+    </div>
+
+    <a href="testing_admin.html">Testing</a>
+    <a href="evaluasi_admin.html">Evaluasi</a>
+</div>
+
+<div class="content">
+
+    <h1>Preprocessing Data</h1>
+
+    <!-- UPLOAD -->
+    <div class="card">
+        <h3>Upload Dataset CSV / Excel</h3>
+
+        <!-- ✅ FIX INPUT -->
+        <input type="file" id="fileCSV" accept=".csv, .xlsx">
+        <button onclick="prosesPreprocessing()">Proses</button>
+
+        <p id="status"></p>
+    </div>
+
+    <!-- PREVIEW -->
+    <div class="card">
+        <h3>Preview Hasil Preprocessing</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Kalimat Asli</th>
+                    <th>Hasil Cleaning</th>
+                </tr>
+            </thead>
+            <tbody id="hasilTable">
+                <tr>
+                    <td colspan="3">Belum ada data</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- DOWNLOAD -->
+    <div class="card">
+        <h3>Download Hasil</h3>
+        <button onclick="downloadCSV()">Download CSV</button>
+    </div>
+
+</div>
+
+<script>
+
+let hasilData = [];
+
+/* SIDEBAR */
+function toggleMenu(menuId) {
+    document.querySelectorAll('.submenu').forEach(menu => {
+        if (menu.id !== menuId) menu.style.display = "none";
+    });
+
+    let current = document.getElementById(menuId);
+    current.style.display = current.style.display === "block" ? "none" : "block";
+}
+
+/* ================= PROSES (FIX KE PYTHON) ================= */
+async function prosesPreprocessing() {
+
+    let file = document.getElementById("fileCSV").files[0];
+    let status = document.getElementById("status");
+    let table = document.getElementById("hasilTable");
+
+    if (!file) {
+        status.innerHTML = "⚠️ Pilih file terlebih dahulu";
+        return;
+    }
+
+    status.innerHTML = "⏳ Mengirim ke server Python...";
+
+    let formData = new FormData();
+    formData.append("file", file);
+
+    try {
+
+        const response = await fetch("http://127.0.0.1:5000/preprocess", {
+            method: "POST",
+            body: formData
+        });
+
+        if (!response.ok) {
+        const err = await response.json();
+        status.innerHTML = "❌ " + err.error;
+        return;
+    }
+
+        const result = await response.json();
+        const data = result.data; // 🔥 FIX UTAMA
+
+        console.log("HASIL:", result);
+
+        hasilData = [];
+        table.innerHTML = "";
+
+        data.forEach((row, i) => {
+
+            hasilData.push(row);
+
+            table.innerHTML += `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${row.teks}</td>
+                    <td>${row.cleaned}</td>
+                </tr>
+            `;
+        });
+
+        status.innerHTML = `✅ Preprocessing selesai (${data.length} data)`;
+
+    } catch (err) {
+        console.error("ERROR:", err);
+        status.innerHTML = "❌ Gagal koneksi ke Python API";
+    }
+}
+
+/* ================= DOWNLOAD ================= */
+function downloadCSV() {
+
+    if (hasilData.length === 0) {
+        alert("Tidak ada data");
+        return;
+    }
+
+    let csv = "teks,cleaned\n";
+
+    hasilData.forEach(row => {
+        csv += `"${row.teks}","${row.cleaned}"\n`;
+    });
+
+    let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    let url = URL.createObjectURL(blob);
+
+    let a = document.createElement("a");
+    a.href = url;
+    a.download = "hasil_preprocessing.csv";
+    a.click();
+}
+
+</script>
+
+</body>
+</html>

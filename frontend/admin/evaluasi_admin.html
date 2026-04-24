@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Evaluasi Model - EduSentiment</title>
+    <link rel="stylesheet" href="../assets/css/style_evaluasi_admin.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="nav-left">
+        <h2>Admin Panel</h2>
+    </div>
+    <div class="nav-right">
+        <a href="login_admin.html" class="btn-logout">Logout</a>
+    </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <a href="dashboard_admin.html">Dashboard</a>
+    <a href="dataset_admin.html">Dataset</a>
+    <a href="preprocessing_admin.html">Pre-Processing</a>
+
+    <div class="menu-item" onclick="toggleMenu('processMenu')">Processing ▾</div>
+    <div class="submenu" id="processMenu">
+        <a href="pengaturan_admin.html">Pengaturan</a>
+        <a href="pelatihanmodel_admin.html">Pelatihan Model</a>
+    </div>
+
+    <a href="testing_admin.html">Testing</a>
+    <a href="evaluasi_admin.html">Evaluasi</a>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+    <h1>Evaluasi Model</h1>
+
+    <!-- METRIK -->
+    <div class="card">
+        <h3>Evaluasi Kinerja Model</h3>
+        <p>Akurasi: <strong>85%</strong></p>
+        <p>Precision: <strong>0.84</strong></p>
+        <p>Recall: <strong>0.83</strong></p>
+        <p>F1-Score: <strong>0.83</strong></p>
+    </div>
+
+    <!-- CONFUSION MATRIX -->
+    <div class="card">
+        <h3>Confusion Matrix</h3>
+        <canvas id="matrixCanvas" width="300" height="300"></canvas>
+    </div>
+
+    <!-- GRAFIK -->
+    <div class="card">
+        <h3>Grafik Performa Model</h3>
+        <canvas id="chartCanvas" height="200"></canvas>
+    </div>
+
+    <!-- ANALISIS -->
+    <div class="card">
+        <h3>Analisis Model</h3>
+        <p>- Model memiliki performa baik pada kelas "Senang".</p>
+        <p>- Masih terdapat kesalahan klasifikasi pada "Sedih" dan "Marah".</p>
+        <p>- Disarankan menambah dataset untuk meningkatkan performa.</p>
+    </div>
+
+</div>
+
+<!-- SCRIPT -->
+<script>
+function toggleMenu(menuId) {
+    const menus = document.querySelectorAll('.submenu');
+    menus.forEach(menu => {
+        if (menu.id !== menuId) menu.style.display = "none";
+    });
+
+    const current = document.getElementById(menuId);
+    current.style.display = (current.style.display === "block") ? "none" : "block";
+}
+
+/* CONFUSION MATRIX */
+function drawMatrix() {
+    let canvas = document.getElementById("matrixCanvas");
+    let ctx = canvas.getContext("2d");
+
+    let matrix = [
+        [8,1,1],
+        [1,7,2],
+        [0,2,8]
+    ];
+
+    let size = 80;
+
+    for (let i=0;i<3;i++){
+        for (let j=0;j<3;j++){
+            ctx.fillStyle = "#3498db";
+            ctx.fillRect(j*size, i*size, size, size);
+
+            ctx.fillStyle = "white";
+            ctx.fillText(matrix[i][j], j*size+30, i*size+45);
+        }
+    }
+}
+
+/* GRAFIK */
+function drawChart() {
+    let canvas = document.getElementById("chartCanvas");
+    let ctx = canvas.getContext("2d");
+
+    let data = [70,80,85];
+
+    ctx.beginPath();
+    ctx.moveTo(0,200-data[0]);
+
+    for(let i=1;i<data.length;i++){
+        ctx.lineTo(i*100,200-data[i]);
+    }
+
+    ctx.stroke();
+}
+
+/* INIT */
+drawMatrix();
+drawChart();
+</script>
+
+</body>
+</html>

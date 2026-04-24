@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Validasi Testing - EduSentiment</title>
+    <link rel="stylesheet" href="../assets/css/style_validasitesting_admin.css">
+
+    <style>
+        .matrix-box {
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .matrix-title {
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #aaa;
+            padding: 6px;
+            text-align: center;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="nav-left">
+        <h2>Admin Panel</h2>
+    </div>
+    <div class="nav-right">
+        <a href="login_admin.html" class="btn-logout">Logout</a>
+    </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <a href="dashboard_admin.html">Dashboard</a>
+    <a href="dataset_admin.html">Dataset</a>
+    <a href="preprocessing_admin.html">Pre-Processing</a>
+
+    <div class="menu-item" onclick="toggleMenu('processMenu')">Processing ▾</div>
+    <div class="submenu" id="processMenu">
+        <a href="pengaturan_admin.html">Pengaturan</a>
+        <a href="pelatihanmodel_admin.html">Pelatihan Model</a>
+    </div>
+
+    <a href="testing_admin.html">Testing</a>
+    <a href="evaluasi_admin.html">Evaluasi</a>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+    <h1>Validasi Hasil Testing</h1>
+
+    <!-- DATA TESTING -->
+    <div class="card">
+        <h3>Data yang Telah Diuji</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Tanggal</th>
+                    <th>Model yang Dipakai</th>
+                </tr>
+            </thead>
+            <tbody id="dataTesting">
+                <tr>
+                    <td colspan="2">Tidak ada data</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- CONFUSION MATRIX -->
+    <div class="card">
+        <h3>Confusion Matrix</h3>
+
+        <!-- INDO BERT -->
+        <div class="matrix-box">
+            <div class="matrix-title">IndoBERT</div>
+
+            <table>
+                <tr>
+                    <th></th>
+                    <th>Senang</th><th>Terkejut</th><th>Netral</th>
+                    <th>Takut</th><th>Kecewa</th><th>Sedih</th><th>Marah</th>
+                </tr>
+
+                <tr><td>Senang</td><td>8</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td>Terkejut</td><td>0</td><td>7</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td>Netral</td><td>1</td><td>0</td><td>9</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td>Takut</td><td>0</td><td>0</td><td>0</td><td>6</td><td>1</td><td>0</td><td>0</td></tr>
+                <tr><td>Kecewa</td><td>0</td><td>0</td><td>0</td><td>1</td><td>7</td><td>0</td><td>0</td></tr>
+                <tr><td>Sedih</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>8</td><td>0</td></tr>
+                <tr><td>Marah</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>9</td></tr>
+            </table>
+        </div>
+
+        <!-- INDO BERT + PEFT -->
+        <div class="matrix-box">
+            <div class="matrix-title">IndoBERT + PEFT</div>
+
+            <table>
+                <tr>
+                    <th></th>
+                    <th>Senang</th><th>Terkejut</th><th>Netral</th>
+                    <th>Takut</th><th>Kecewa</th><th>Sedih</th><th>Marah</th>
+                </tr>
+
+                <tr><td>Senang</td><td>9</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td>Terkejut</td><td>0</td><td>8</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td>Netral</td><td>0</td><td>0</td><td>10</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td>Takut</td><td>0</td><td>0</td><td>0</td><td>7</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td>Kecewa</td><td>0</td><td>0</td><td>0</td><td>0</td><td>8</td><td>0</td><td>0</td></tr>
+                <tr><td>Sedih</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>9</td><td>0</td></tr>
+                <tr><td>Marah</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>10</td></tr>
+            </table>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+    function toggleMenu(menuId) {
+    const menus = document.querySelectorAll('.submenu');
+
+    menus.forEach(menu => {
+        if (menu.id !== menuId) {
+            menu.style.display = "none";
+        }
+    });
+
+    const current = document.getElementById(menuId);
+    current.style.display = (current.style.display === "block") ? "none" : "block";
+}
+
+/* LOAD DATA DARI HALAMAN TESTING */
+function loadData() {
+
+    let data = JSON.parse(localStorage.getItem("dataTesting"));
+
+    let table = document.getElementById("dataTesting");
+
+    if (!data) {
+        table.innerHTML = `<tr><td colspan="2">Tidak ada data</td></tr>`;
+        return;
+    }
+
+    let modelText = data.model === "indobert_peft"
+        ? "IndoBERT + PEFT"
+        : "IndoBERT";
+
+    table.innerHTML = `
+        <tr>
+            <td>${data.tanggal}</td>
+            <td>${modelText}</td>
+        </tr>
+    `;
+}
+
+loadData();
+
+</script>
+
+</body>
+</html>

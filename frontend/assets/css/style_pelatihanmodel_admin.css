@@ -1,0 +1,207 @@
+/* ================= GLOBAL ================= */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f4f6f9;
+}
+
+/* ================= NAVBAR ================= */
+.navbar {
+    height: 60px;
+    background: #2c3e50;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    box-sizing: border-box;
+    z-index: 1000;
+}
+
+.nav-left h2 {
+    margin: 0;
+    font-size: 20px;
+}
+
+/* LOGOUT BUTTON */
+.btn-logout {
+    text-decoration: none;
+    padding: 8px 15px;
+    background: white;
+    color: #2c3e50;
+    border-radius: 6px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.btn-logout:hover {
+    background: #ddd;
+}
+
+/* ================= SIDEBAR ================= */
+.sidebar {
+    width: 220px;
+    background: #34495e;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    height: calc(100vh - 60px);
+    padding-top: 10px;
+}
+
+/* Menu dropdown */
+.menu-item {
+    padding: 12px 15px;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.menu-item:hover {
+    background: #1abc9c;
+}
+
+/* Link sidebar */
+.sidebar a {
+    display: block;
+    padding: 12px 15px;
+    color: white;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.sidebar a:hover {
+    background: #1abc9c;
+}
+
+/* Submenu */
+.submenu {
+    display: none;
+    background: #3b4f63;
+}
+
+.submenu a {
+    padding-left: 30px;
+    font-size: 13px;
+}
+
+/* ===== ACTIVE MENU ===== */
+.menu-item.active {
+    background: transparent;   /* tidak hijau */
+}
+
+/* submenu tampil */
+.submenu.show {
+    display: block;
+}
+
+/* submenu aktif */
+.submenu a.active-sub {
+    background: #16a085;
+}
+
+/* ================= CONTENT ================= */
+.content {
+    margin-left: 220px;
+    margin-top: 60px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* ================= CARD ================= */
+.card {
+    background: white;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+.card h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+/* ================= BUTTON ================= */
+button {
+    margin-top: 10px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    background: #27ae60;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: #219150;
+}
+
+/* ================= STATUS ================= */
+#statusTraining {
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+/* ================= PROGRESS BAR ================= */
+.progress-container {
+    width: 100%;
+    background: #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.progress-bar {
+    height: 20px;
+    width: 0%;
+    background: #27ae60;
+    text-align: center;
+    color: white;
+    font-size: 12px;
+    transition: width 0.3s;
+}
+
+/* ================= LOG BOX ================= */
+.log-box {
+    background: #000;
+    color: #00ff00;
+    padding: 10px;
+    height: 200px;
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 13px;
+    border-radius: 8px;
+}
+
+/* ================= TABLE ================= */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th {
+    background: #2c3e50;
+    color: white;
+    padding: 10px;
+    font-size: 14px;
+}
+
+td {
+    padding: 8px;
+    text-align: center;
+    font-size: 14px;
+    background: #ecf0f1;
+}
+
+tr:nth-child(even) td {
+    background: #dfe6e9;
+}

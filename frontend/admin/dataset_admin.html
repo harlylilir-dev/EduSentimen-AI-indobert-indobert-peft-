@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Dataset Admin - EduSentiment</title>
+    <link rel="stylesheet" href="../assets/css/style_dataset_admin.css">
+</head>
+<body>
+
+<!-- ================= NAVBAR ================= -->
+<div class="navbar">
+    <div class="nav-left">
+        <h2>Admin Panel</h2>
+    </div>
+    <div class="nav-right">
+        <a href="login_admin.html" class="btn-logout">Logout</a>
+    </div>
+</div>
+
+<!-- ================= SIDEBAR ================= -->
+<div class="sidebar">
+
+    <a href="dashboard_admin.html">Dashboard</a>
+    <a href="dataset_admin.html">Dataset</a>
+
+   <a href="preprocessing_admin.html">Pre-Processing</a>
+
+    <div class="menu-item" onclick="toggleMenu('processMenu')">Processing ▾</div>
+    <div class="submenu" id="processMenu">
+        <a href="pengaturan_admin.html">Pengaturan</a>
+        <a href="pelatihanmodel_admin.html">Pelatihan Model</a>
+    </div>
+
+    <a href="testing_admin.html">Testing</a>
+    <a href="evaluasi_admin.html">Evaluasi</a>
+
+</div>
+
+<!-- ================= CONTENT ================= -->
+<div class="content">
+
+    <h1>Manajemen Dataset</h1>
+
+    <!-- UPLOAD -->
+    <div class="card">
+        <h3>Upload Dataset CSV</h3>
+        <input type="file" id="fileCSV" accept=".csv">
+        <button onclick="uploadCSV()">Upload</button>
+        <p id="statusUpload"></p>
+    </div>
+
+    <!-- DATASET LIST -->
+    <div class="card">
+    <h3>Daftar Dataset</h3>
+
+    <!-- SEARCH -->
+    <input type="text" id="searchInput" placeholder="Cari nama dataset..." 
+           onkeyup="searchDataset()" style="margin-bottom:10px; padding:6px; width:20%;">
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID Dataset</th>
+                <th>Nama Dataset</th>
+                <th>Jumlah Data</th>
+                <th>Tanggal Upload</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="listDataset">
+
+            <tr>
+                <td>D01</td>
+                <td class="nama">Dataset Opini Pendidikan 1</td>
+                <td>100</td>
+                <td>2026-05-20</td>
+                <td>
+                    <button onclick="tampilDataset('D01')">Lihat</button>
+                    <button class="btn-delete" onclick="hapusDataset(this)">🗑️</button>
+                </td>
+            </tr>
+
+            <tr>
+                <td>D02</td>
+                <td class="nama">Dataset Opini Pendidikan 2</td>
+                <td>80</td>
+                <td>2026-05-18</td>
+                <td>
+                    <button onclick="tampilDataset('D02')">Lihat</button>
+                    <button class="btn-delete" onclick="hapusDataset(this)">🗑️</button>
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+</div>
+
+    <!-- DETAIL DATASET -->
+    <div class="card" id="detailDataset" style="display:none;">
+        <h3 id="judulDataset">Detail Dataset</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Kalimat</th>
+                    <th>Label</th>
+                </tr>
+            </thead>
+            <tbody id="isiDataset"></tbody>
+        </table>
+    </div>
+
+</div>
+
+<!-- ================= SCRIPT ================= -->
+<script>
+function toggleMenu(menuId) {
+    const menus = document.querySelectorAll('.submenu');
+
+    menus.forEach(menu => {
+        if (menu.id !== menuId) {
+            menu.style.display = "none";
+        }
+    });
+
+    const current = document.getElementById(menuId);
+    current.style.display = (current.style.display === "block") ? "none" : "block";
+}
+
+/* SEARCH DATASET */
+function searchDataset() {
+    let input = document.getElementById("searchInput").value.toLowerCase();
+    let rows = document.querySelectorAll("#listDataset tr");
+
+    rows.forEach(row => {
+        let nama = row.querySelector(".nama").innerText.toLowerCase();
+
+        if (nama.includes(input)) {
+            row.style.display = "";
+        } else {
+            row.style.display = "none";
+        }
+    });
+}
+
+/* HAPUS DATASET */
+function hapusDataset(button) {
+    if (confirm("Yakin ingin menghapus dataset ini?")) {
+        let row = button.parentElement.parentElement;
+        row.remove();
+    }
+}
+
+/* Upload */
+function uploadCSV() {
+    let file = document.getElementById("fileCSV").files[0];
+    let status = document.getElementById("statusUpload");
+
+    if (!file) {
+        status.innerHTML = "⚠️ Pilih file CSV terlebih dahulu";
+        return;
+    }
+
+    status.innerHTML = "⏳ Uploading...";
+
+    setTimeout(() => {
+        status.innerHTML = "✅ Dataset berhasil diupload";
+    }, 1000);
+}
+
+/* DATA SIMULASI */
+const datasetData = {
+    D01: [
+        { no: 1, kalimat: "Pendidikan gratis sangat membantu", label: "Senang" },
+        { no: 2, kalimat: "Biaya sekolah masih mahal", label: "Sedih" }
+    ],
+    D02: [
+        { no: 1, kalimat: "Anggaran tidak merata", label: "Marah" },
+        { no: 2, kalimat: "Fasilitas sekolah kurang", label: "Sedih" }
+    ]
+};
+
+/* TAMPILKAN DETAIL */
+function tampilDataset(id) {
+    let detail = document.getElementById("detailDataset");
+    let isi = document.getElementById("isiDataset");
+    let judul = document.getElementById("judulDataset");
+
+    detail.style.display = "block";
+    judul.innerHTML = "Detail Dataset: " + id;
+
+    isi.innerHTML = "";
+
+    datasetData[id].forEach(item => {
+        isi.innerHTML += `
+            <tr>
+                <td>${item.no}</td>
+                <td>${item.kalimat}</td>
+                <td>${item.label}</td>
+            </tr>
+        `;
+    });
+}
+</script>
+
+</body>
+</html>

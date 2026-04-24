@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduSentiment</title>
+    <link rel="stylesheet" href="assets/css/style_utama_public.css">
+
+    <style>
+        .hasil-box {
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            padding: 20px;
+            background: #f9f9f9;
+        }
+
+        .hasil-box h4 {
+            margin-bottom: 10px;
+        }
+
+        .line {
+            border-bottom: 1px solid #ccc;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="nav-left">
+        <img src="assets/images/logoppl.jpg" class="logo">
+    </div>
+
+    <div class="nav-right">
+        <a href="admin/login_admin.html" class="btn-login">Login Admin</a>
+    </div>
+</div>
+
+<div class="container">
+
+    <h1>EduSentiment</h1>
+    <p>Analisis Emosi terhadap Efisiensi Anggaran Pendidikan</p>
+
+    <!-- INPUT -->
+    <div class="card">
+        <h3>Input Opini</h3>
+
+        <textarea id="inputText" placeholder="Masukkan opini di sini..."></textarea>
+
+        <h4>Atau Upload CSV</h4>
+        <input type="file" id="inputCSV" accept=".csv">
+
+        <button class="btn-proses" onclick="prosesData()">Proses</button>
+
+        <p id="status" style="color: gray;"></p>
+    </div>
+
+    <!-- OUTPUT SEDERHANA -->
+    <div class="card">
+        <h3>Hasil Klasifikasi</h3>
+
+        <div class="hasil-box" id="hasilBox">
+            <p><strong>Teks yang dianalisis:</strong></p>
+            <p id="teksHasil">-</p>
+
+            <div class="line"></div>
+
+            <p><strong>Kalimat di atas mengandung emosi:</strong></p>
+            <p id="emosiHasil"><b>-</b></p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+function prosesData() {
+    let text = document.getElementById("inputText").value;
+    let file = document.getElementById("inputCSV").files[0];
+    let status = document.getElementById("status");
+
+    if (text === "" && !file) {
+        status.innerHTML = "⚠️ Masukkan teks atau upload file CSV";
+        return;
+    }
+
+    status.innerHTML = "⏳ Memproses...";
+
+    setTimeout(() => {
+        status.innerHTML = "✅ Selesai";
+
+        // SIMULASI HASIL (nanti backend)
+        let hasilEmosi = "Senang";
+
+        document.getElementById("teksHasil").innerText = text || "Data dari file CSV";
+        document.getElementById("emosiHasil").innerHTML = `<b>${hasilEmosi.toUpperCase()}</b>`;
+
+    }, 800);
+}
+</script>
+
+</body>
+</html>

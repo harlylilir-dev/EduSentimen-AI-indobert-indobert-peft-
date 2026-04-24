@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Detail Model - EduSentiment</title>
+
+    <link rel="stylesheet" href="../assets/css/style_pengaturan_admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="nav-left">
+        <h2>Admin Panel</h2>
+    </div>
+    <div class="nav-right">
+        <a href="login_admin.html" class="btn-logout">Logout</a>
+    </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <a href="dashboard_admin.html">Dashboard</a>
+    <a href="dataset_admin.html">Dataset</a>
+    <a href="preprocessing_admin.html">Pre-Processing</a>
+
+    <div class="menu-item active">
+        Processing ▾
+    </div>
+    <div class="submenu show">
+        <a href="pengaturan_admin.html" class="active-sub">Pengaturan</a>
+        <a href="pelatihanmodel_admin.html">Pelatihan Model</a>
+    </div>
+
+    <a href="testing_admin.html">Testing</a>
+    <a href="evaluasi_admin.html">Evaluasi</a>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+<h1>Detail Model</h1>
+
+<!-- INFO -->
+<div class="card">
+    <h3>Informasi Model</h3>
+    <p><b>Nama:</b> <span id="nama"></span></p>
+    <p><b>Jenis:</b> <span id="jenis"></span></p>
+</div>
+
+<!-- INDO BERT -->
+<div class="card">
+    <h3>Parameter IndoBERT</h3>
+    <p><b>Epoch:</b> <span id="epoch"></span></p>
+    <p><b>Batch Size:</b> <span id="batch"></span></p>
+    <p><b>Learning Rate:</b> <span id="lr"></span></p>
+</div>
+
+<!-- PEFT -->
+<div class="card" id="peftCard">
+    <h3>Parameter PEFT</h3>
+
+    <!-- ADAPTER -->
+    <h4>Adapter</h4>
+    <p>r: <span id="adapter_r"></span></p>
+    <p>Dropout: <span id="adapter_dropout"></span></p>
+    <p>Activation: <span id="adapter_act"></span></p>
+    <p>Non-linearity: <span id="adapter_nonlin"></span></p>
+
+    <!-- LORA -->
+    <h4>LoRA</h4>
+    <p>r: <span id="lora_r"></span></p>
+    <p>Alpha: <span id="lora_alpha"></span></p>
+    <p>Dropout: <span id="lora_dropout"></span></p>
+    <p>Target: <span id="lora_target"></span></p>
+    <p>Bias: <span id="lora_bias"></span></p>
+    <p>Task: <span id="lora_task"></span></p>
+
+    <!-- QLORA -->
+    <h4>QLoRA</h4>
+    <p>r: <span id="qlora_r"></span></p>
+    <p>Alpha: <span id="qlora_alpha"></span></p>
+    <p>Dropout: <span id="qlora_dropout"></span></p>
+    <p>Quant: <span id="qlora_quant"></span></p>
+    <p>Dtype: <span id="qlora_dtype"></span></p>
+    <p>Double Quant: <span id="qlora_double"></span></p>
+    <p>Bits: <span id="qlora_bits"></span></p>
+
+    <!-- FUSION -->
+    <h4>Adapter Fusion</h4>
+    <p>Jumlah Adapter: <span id="fusion_n"></span></p>
+    <p>Type: <span id="fusion_type"></span></p>
+    <p>Temperature: <span id="fusion_temp"></span></p>
+    <p>Dropout: <span id="fusion_dropout"></span></p>
+
+    <!-- TRAINING -->
+    <h4>Training Strategy</h4>
+    <p>Optimizer: <span id="optimizer"></span></p>
+    <p>Scheduler: <span id="scheduler"></span></p>
+    <p>Early Stop: <span id="early_stop"></span></p>
+</div>
+
+</div>
+
+<script>
+
+// ===== SUPABASE =====
+const supabaseUrl = "https://ylaxeriooiwytmjrklff.supabase.co";
+const supabaseKey = "sb_publishable_RBYPP8Wxw_lz2xNY77mcvw_jSuIzaHb";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+// ===== AMBIL ID =====
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
+
+// ===== LOAD DETAIL =====
+async function loadDetail() {
+
+    const { data, error } = await supabaseClient
+        .from("models")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+    if (error) {
+        alert("Gagal load data");
+        return;
+    }
+
+    // INFO
+    nama.innerText = data.nama;
+    jenis.innerText = data.model;
+
+    // INDO BERT
+    epoch.innerText = data.config.epoch;
+    batch.innerText = data.config.batch;
+    lr.innerText = data.config.lr;
+
+    // CEK PEFT
+    if (!data.config.peft) {
+        document.getElementById("peftCard").style.display = "none";
+        return;
+    }
+
+    let p = data.config.peft;
+
+    // ================= ADAPTER =================
+    adapter_r.innerText = p.adapter?.r;
+    adapter_dropout.innerText = p.adapter?.dropout;
+    adapter_act.innerText = p.adapter?.act;
+    adapter_nonlin.innerText = p.adapter?.nonlin;
+
+    // ================= LORA =================
+    lora_r.innerText = p.lora?.r;
+    lora_alpha.innerText = p.lora?.alpha;
+    lora_dropout.innerText = p.lora?.dropout;
+    lora_target.innerText = p.lora?.target;
+    lora_bias.innerText = p.lora?.bias;
+    lora_task.innerText = p.lora?.task;
+
+    // ================= QLORA =================
+    qlora_r.innerText = p.qlora?.r;
+    qlora_alpha.innerText = p.qlora?.alpha;
+    qlora_dropout.innerText = p.qlora?.dropout;
+    qlora_quant.innerText = p.qlora?.quant;
+    qlora_dtype.innerText = p.qlora?.dtype;
+    qlora_double.innerText = p.qlora?.double;
+    qlora_bits.innerText = p.qlora?.bits;
+
+    // ================= FUSION =================
+    fusion_n.innerText = p.fusion?.n;
+    fusion_type.innerText = p.fusion?.type;
+    fusion_temp.innerText = p.fusion?.temp;
+    fusion_dropout.innerText = p.fusion?.dropout;
+
+    // ================= TRAINING =================
+    optimizer.innerText = p.training?.optimizer;
+    scheduler.innerText = p.training?.scheduler;
+    early_stop.innerText = p.training?.early_stop;
+}
+
+loadDetail();
+
+</script>
+
+</body>
+</html>

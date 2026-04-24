@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Pelatihan Model - EduSentiment</title>
+    <link rel="stylesheet" href="../assets/css/style_pelatihanmodel_admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="nav-left">
+        <h2>Admin Panel</h2>
+    </div>
+    <div class="nav-right">
+        <a href="login_admin.html" class="btn-logout">Logout</a>
+    </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <a href="dashboard_admin.html">Dashboard</a>
+    <a href="dataset_admin.html">Dataset</a>
+    <a href="preprocessing_admin.html">Pre-Processing</a>
+
+    <div class="menu-item active" onclick="toggleMenu('processMenu', this)">
+        Processing ▾
+    </div>
+
+    <div class="submenu show" id="processMenu">
+        <a href="pengaturan_admin.html">Pengaturan</a>
+        <a href="pelatihanmodel_admin.html" class="active-sub">Pelatihan Model</a>
+    </div>
+
+    <a href="testing_admin.html">Testing</a>
+    <a href="evaluasi_admin.html">Evaluasi</a>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+<h1>Pelatihan Model</h1>
+
+<!-- FORM -->
+<div class="card">
+    <h3>Pelatihan Data</h3>
+
+    <label>Upload Dataset (.csv)</label><br><br>
+    <input type="file" id="datasetFile" accept=".csv">
+
+    <br><br>
+
+    <label>Pilih Model dari Pengaturan</label>
+    <select id="modelSelect"></select>
+
+    <br><br>
+
+    <button onclick="prosesTraining()">Proses Training</button>
+    <p id="status"></p>
+</div>
+
+<!-- HASIL -->
+<div class="card">
+    <h3>Hasil Pelatihan</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Nama File</th>
+                <th>Model</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="hasilTable"></tbody>
+    </table>
+</div>
+
+</div>
+
+<script>
+
+// ================= SUPABASE =================
+const supabaseUrl = "https://ylaxeriooiwytmjrklff.supabase.co";
+const supabaseKey = "sb_publishable_RBYPP8Wxw_lz2xNY77mcvw_jSuIzaHb";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+// ================= MENU =================
+function toggleMenu(menuId, el) {
+    const allMenus = document.querySelectorAll('.submenu');
+    const allItems = document.querySelectorAll('.menu-item');
+
+    allMenus.forEach(menu => {
+        if (menu.id !== menuId) menu.classList.remove("show");
+    });
+
+    allItems.forEach(item => item.classList.remove("active"));
+
+    document.getElementById(menuId).classList.toggle("show");
+    el.classList.add("active");
+}
+
+// ================= LOAD MODEL =================
+async function loadModelDropdown() {
+    const { data, error } = await supabaseClient
+        .from("models")
+        .select("*");
+
+    let select = document.getElementById("modelSelect");
+    select.innerHTML = '<option value="">-- Pilih Model --</option>';
+
+    data.forEach(item => {
+        select.innerHTML += `
+            <option value="${item.id}">
+                ${item.nama}
+            </option>
+        `;
+    });
+
+}
+
+// ================= TRAINING =================
+async function prosesTraining() {
+
+    const file = document.getElementById("datasetFile").files[0];
+    const modelId = document.getElementById("modelSelect").value;
+
+    if (!file) {
+        alert("Upload dataset dulu");
+        return;
+    }
+
+    // 🔥 ambil config dari Supabase
+    const { data } = await supabaseClient
+        .from("models")
+        .select("*")
+        .eq("id", modelId)
+        .single();
+
+    const config = data.config;
+
+    let formData = new FormData();
+    formData.append("file", file);
+    formData.append("config", JSON.stringify(config));
+
+    try {
+        const res = await fetch("http://127.0.0.1:5000/train", {
+            method: "POST",
+            body: formData
+        });
+
+        const result = await res.json();
+        alert("Training selesai!");
+
+        console.log(result);
+
+    } catch (err) {
+        console.error(err);
+        alert("Training gagal");
+    }
+}
+
+// ================= LOAD HASIL =================
+async function loadHasilPelatihan() {
+    const res = await fetch("http://127.0.0.1:5000/models");
+    const data = await res.json();
+
+    let table = document.getElementById("hasilTable");
+    table.innerHTML = "";
+
+    data.forEach((item, i) => {
+        table.innerHTML += `
+            <tr>
+                <td>${i+1}</td>
+                <td>${item.nama_file}</td>
+                <td>${item.model}</td>
+                <td>${item.model_path}</td>
+            </tr>
+        `;
+    });
+}
+
+// ================= LIHAT DETAIL =================
+function lihatDetail(id) {
+    window.location.href = "detailpengaturanmodel_admin.html?id=" + id;
+}
+
+// ================= INIT =================
+async function loadModels() {
+    console.log("loadModels jalan");
+}
+
+window.onload = function() {
+    loadModelDropdown();
+    loadHasilPelatihan();
+};
+
+</script>
+
+</body>
+</html>

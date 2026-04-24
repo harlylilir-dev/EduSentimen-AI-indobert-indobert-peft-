@@ -1,0 +1,176 @@
+/* ================= GLOBAL ================= */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f4f6f9;
+    
+}
+
+/* ================= NAVBAR ================= */
+.navbar {
+    height: 60px;
+    background: #2c3e50;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    box-sizing: border-box;
+    z-index: 1000;
+}
+
+.nav-left h2 {
+    margin: 0;
+    font-size: 20px;
+}
+
+/* Menu utama (dropdown) */
+.menu-item {
+    padding: 12px 15px;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.menu-item:hover {
+    background: #1abc9c;
+}
+
+.submenu a {
+    display: block;
+    padding: 10px 30px;
+    font-size: 13px;
+    color: white;
+    text-decoration: none;
+}
+
+.submenu a:hover {
+    background: #1abc9c;
+}
+
+/* LOGOUT */
+.btn-logout {
+    text-decoration: none;
+    padding: 8px 15px;
+    background: white;
+    color: #2c3e50;
+    border-radius: 6px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.btn-logout:hover {
+    background: #ddd;
+}
+
+/* ================= SIDEBAR ================= */
+.sidebar {
+    width: 220px;
+    background: #34495e;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    height: calc(100vh - 60px);
+    padding-top: 10px;
+}
+
+.sidebar a {
+    display: block;
+    padding: 12px 15px;
+    color: white;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.sidebar a:hover {
+    background: #1abc9c;
+}
+
+/* ================= CONTENT ================= */
+.content {
+    margin-left: 220px;
+    margin-top: 60px;
+    padding: 20px;
+}
+
+/* ================= CARD ================= */
+.card {
+    background: white;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+.card h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+/* ================= TABLE ================= */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th {
+    background: #2c3e50;
+    color: white;
+    padding: 10px;
+    font-size: 14px;
+}
+
+td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    font-size: 13px;
+}
+
+/* Zebra effect */
+tbody tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+/* ================= CONFUSION MATRIX ================= */
+.matrix-box {
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 15px;
+    background: #fafafa;
+}
+
+.matrix-title {
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Matrix table */
+.matrix-box table th,
+.matrix-box table td {
+    border: 1px solid #bbb;
+    padding: 6px;
+    font-size: 12px;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 180px;
+    }
+
+    .content {
+        margin-left: 180px;
+    }
+
+    th, td {
+        font-size: 11px;
+    }
+}

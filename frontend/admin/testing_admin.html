@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Testing Model - EduSentiment</title>
+    <link rel="stylesheet" href="../assets/css/style_testing_admin.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="nav-left">
+        <h2>Admin Panel</h2>
+    </div>
+    <div class="nav-right">
+        <a href="login_admin.html" class="btn-logout">Logout</a>
+    </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <a href="dashboard_admin.html">Dashboard</a>
+    <a href="dataset_admin.html">Dataset</a>
+    <a href="preprocessing_admin.html">Pre-Processing</a>
+
+    <div class="menu-item" onclick="toggleMenu('processMenu')">Processing ▾</div>
+    <div class="submenu" id="processMenu">
+        <a href="pengaturan_admin.html">Pengaturan</a>
+        <a href="pelatihanmodel_admin.html">Pelatihan Model</a>
+    </div>
+
+    <a href="testing_admin.html">Testing</a>
+    <a href="evaluasi_admin.html">Evaluasi</a>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+    <h1>Testing</h1>
+
+    <!-- ================= INPUT ================= -->
+    <div class="card">
+
+    <h3>Input Data Testing</h3>
+
+    <div class="testing-grid">
+
+        <!-- INPUT TEKS -->
+        <div class="input-group">
+            <label>Input Teks</label>
+            <input type="text" id="inputText" placeholder="Masukkan teks...">
+        </div>
+
+        <!-- ATAU -->
+        <div class="divider">ATAU</div>
+
+        <!-- FILE CSV -->
+        <div class="input-group">
+            <label>File CSV</label>
+            <input type="file" id="fileTest" accept=".csv">
+        </div>
+
+        <!-- PILIH MODEL -->
+        <div class="input-group full-width">
+            <label>Pilih Model</label>
+            <select id="pilihModel"></select>
+        </div>
+
+        <!-- BUTTON -->
+        <div class="full-width">
+            <button onclick="prosesTesting()">Proses</button>
+            <p id="statusTest">Status: -</p>
+        </div>
+
+    </div>
+
+</div>
+
+    <!-- ================= HASIL ================= -->
+    <div class="card">
+        <h3>Hasil Testing</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Tanggal Pengujian</th>
+                    <th>Model</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="tabelTesting">
+                <tr>
+                    <td colspan="4">Belum ada hasil</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<!-- SCRIPT -->
+<script>
+
+/* SIDEBAR */
+function toggleMenu(menuId) {
+    document.querySelectorAll('.submenu').forEach(menu => {
+        if (menu.id !== menuId) menu.style.display = "none";
+    });
+
+    const current = document.getElementById(menuId);
+    current.style.display = (current.style.display === "block") ? "none" : "block";
+}
+
+/* LOAD MODEL */
+function loadModelDropdown() {
+    let models = JSON.parse(localStorage.getItem("models")) || [];
+    let select = document.getElementById("pilihModel");
+
+    select.innerHTML = "";
+
+    if (models.length === 0) {
+        select.innerHTML = `<option value="">Belum ada model</option>`;
+        return;
+    }
+
+    models.forEach((m, i) => {
+        let opt = document.createElement("option");
+        opt.value = i;
+        opt.text = m.nama;
+        select.appendChild(opt);
+    });
+}
+
+/* PROSES TESTING */
+function prosesTesting() {
+
+    let file = document.getElementById("fileTest").files[0];
+    let text = document.getElementById("inputText").value;
+    let modelIndex = document.getElementById("pilihModel").value;
+    let status = document.getElementById("statusTest");
+
+    if (!file && !text) {
+        status.innerHTML = "⚠️ Input teks atau upload file terlebih dahulu";
+        return;
+    }
+
+    let models = JSON.parse(localStorage.getItem("models")) || [];
+
+    if (models.length === 0 || modelIndex === "") {
+        status.innerHTML = "⚠️ Pilih model";
+        return;
+    }
+
+    let model = models[modelIndex];
+
+    status.innerHTML = "⏳ Proses testing...";
+
+    setTimeout(() => {
+        status.innerHTML = "✅ Testing selesai";
+
+        simpanTesting(model);
+
+    }, 1000);
+}
+
+/* SIMPAN HASIL TESTING */
+function simpanTesting(model) {
+
+    let data = JSON.parse(localStorage.getItem("hasilTesting")) || [];
+
+    let tanggal = new Date().toLocaleDateString("id-ID");
+
+    let tipeModel = model.model === "indobert_peft"
+        ? "indobert_peft"
+        : "indobert";
+
+    data.push({
+        tanggal: tanggal,
+        model: tipeModel
+    });
+
+    localStorage.setItem("hasilTesting", JSON.stringify(data));
+
+    loadTesting();
+}
+
+/* LOAD HASIL */
+function loadTesting() {
+
+    let data = JSON.parse(localStorage.getItem("hasilTesting"));
+
+    // 🔥 DATA DEFAULT (WAJIB BIAR TOMBOL LIHAT BISA DIPAKAI)
+    if (!data || data.length === 0) {
+
+        data = [
+            {
+                tanggal: "16-04-2025",
+                model: "indobert"
+            },
+            {
+                tanggal: "17-04-2025",
+                model: "indobert_peft"
+            }
+        ];
+
+        localStorage.setItem("hasilTesting", JSON.stringify(data));
+    }
+
+    let table = document.getElementById("tabelTesting");
+    table.innerHTML = "";
+
+    data.forEach((item, i) => {
+
+        let modelText = item.model === "indobert_peft"
+            ? "IndoBERT + PEFT"
+            : "IndoBERT";
+
+        table.innerHTML += `
+            <tr>
+                <td>${i + 1}</td>
+                <td>${item.tanggal}</td>
+                <td>${modelText}</td>
+                <td>
+                    <button onclick="lihat(${i})">Lihat</button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+/* KE VALIDASI */
+function lihat(index) {
+
+    let data = JSON.parse(localStorage.getItem("hasilTesting")) || [];
+
+    localStorage.setItem("dataTesting", JSON.stringify(data[index]));
+
+    window.location.href = "validasitesting_admin.html";
+}
+
+/* INIT */
+loadModelDropdown();
+loadTesting();
+
+</script>
+
+</body>
+</html>
