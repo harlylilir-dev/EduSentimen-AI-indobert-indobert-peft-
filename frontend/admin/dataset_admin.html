@@ -4,6 +4,35 @@
     <meta charset="UTF-8">
     <title>Dataset Admin - EduSentiment</title>
     <link rel="stylesheet" href="../assets/css/style_dataset_admin.css">
+    <style>
+        /* Tambahan styling untuk pagination & rename */
+        .pagination {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+        }
+        .pagination button {
+            padding: 6px 12px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+        .btn-edit {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 6px;
+            color: #1a73e8;
+        }
+    </style>
 </head>
 <body>
 
@@ -19,26 +48,20 @@
 
 <!-- ================= SIDEBAR ================= -->
 <div class="sidebar">
-
     <a href="dashboard_admin.html">Dashboard</a>
     <a href="dataset_admin.html">Dataset</a>
-
-   <a href="preprocessing_admin.html">Pre-Processing</a>
-
+    <a href="preprocessing_admin.html">Pre-Processing</a>
     <div class="menu-item" onclick="toggleMenu('processMenu')">Processing ▾</div>
     <div class="submenu" id="processMenu">
         <a href="pengaturan_admin.html">Pengaturan</a>
         <a href="pelatihanmodel_admin.html">Pelatihan Model</a>
     </div>
-
     <a href="testing_admin.html">Testing</a>
     <a href="evaluasi_admin.html">Evaluasi</a>
-
 </div>
 
 <!-- ================= CONTENT ================= -->
 <div class="content">
-
     <h1>Manajemen Dataset</h1>
 
     <!-- UPLOAD -->
@@ -51,54 +74,31 @@
 
     <!-- DATASET LIST -->
     <div class="card">
-    <h3>Daftar Dataset</h3>
-
-    <!-- SEARCH -->
-    <input type="text" id="searchInput" placeholder="Cari nama dataset..." 
-           onkeyup="searchDataset()" style="margin-bottom:10px; padding:6px; width:20%;">
-
-    <table>
-        <thead>
-            <tr>
-                <th>ID Dataset</th>
-                <th>Nama Dataset</th>
-                <th>Jumlah Data</th>
-                <th>Tanggal Upload</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody id="listDataset">
-
-            <tr>
-                <td>D01</td>
-                <td class="nama">Dataset Opini Pendidikan 1</td>
-                <td>100</td>
-                <td>2026-05-20</td>
-                <td>
-                    <button onclick="tampilDataset('D01')">Lihat</button>
-                    <button class="btn-delete" onclick="hapusDataset(this)">🗑️</button>
-                </td>
-            </tr>
-
-            <tr>
-                <td>D02</td>
-                <td class="nama">Dataset Opini Pendidikan 2</td>
-                <td>80</td>
-                <td>2026-05-18</td>
-                <td>
-                    <button onclick="tampilDataset('D02')">Lihat</button>
-                    <button class="btn-delete" onclick="hapusDataset(this)">🗑️</button>
-                </td>
-            </tr>
-
-        </tbody>
-    </table>
-</div>
+        <h3>Daftar Dataset</h3>
+        <!-- SEARCH -->
+        <input type="text" id="searchInput" placeholder="Cari nama dataset..." 
+               onkeyup="searchDataset()" style="margin-bottom:10px; padding:6px; width:20%;">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID Dataset</th>
+                    <th>Nama Dataset</th>
+                    <th>Jumlah Data</th>
+                    <th>Tanggal Upload</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="listDataset">
+                <!-- Diisi oleh JavaScript -->
+            </tbody>
+        </table>
+        <!-- Pagination Daftar Dataset -->
+        <div id="paginationList" class="pagination"></div>
+    </div>
 
     <!-- DETAIL DATASET -->
     <div class="card" id="detailDataset" style="display:none;">
         <h3 id="judulDataset">Detail Dataset</h3>
-
         <table>
             <thead>
                 <tr>
@@ -107,101 +107,275 @@
                     <th>Label</th>
                 </tr>
             </thead>
-            <tbody id="isiDataset"></tbody>
+            <tbody id="isiDataset">
+                <!-- Diisi oleh JavaScript -->
+            </tbody>
         </table>
+        <!-- Pagination Detail -->
+        <div id="paginationDetail" class="pagination"></div>
     </div>
-
 </div>
 
 <!-- ================= SCRIPT ================= -->
 <script>
-function toggleMenu(menuId) {
-    const menus = document.querySelectorAll('.submenu');
+// ==================== DATA SIMULASI (nantinya diganti API) ====================
+let datasets = [
+    {
+        id: "D01",
+        nama: "Dataset Opini Pendidikan 1",
+        jumlahData: 2,
+        tanggalUpload: "2026-05-20",
+        dataKalimat: [
+            { no: 1, kalimat: "Pendidikan gratis sangat membantu", label: "Senang" },
+            { no: 2, kalimat: "Biaya sekolah masih mahal", label: "Sedih" }
+        ]
+    },
+    {
+        id: "D02",
+        nama: "Dataset Opini Pendidikan 2",
+        jumlahData: 2,
+        tanggalUpload: "2026-05-18",
+        dataKalimat: [
+            { no: 1, kalimat: "Anggaran tidak merata", label: "Marah" },
+            { no: 2, kalimat: "Fasilitas sekolah kurang", label: "Sedih" }
+        ]
+    }
+];
 
-    menus.forEach(menu => {
-        if (menu.id !== menuId) {
-            menu.style.display = "none";
-        }
+// ==================== PAGINATION SETTINGS ====================
+const ITEMS_PER_PAGE = 10;
+let currentPageList = 1;           // halaman untuk daftar dataset
+let currentPageDetail = 1;         // halaman untuk detail dataset
+let datasetDetailId = null;        // ID dataset yang sedang dilihat detailnya
+
+// ==================== FUNGSI UTAMA ====================
+
+// Render tabel daftar dataset
+function renderDatasetList(filteredDatasets = datasets) {
+    const tbody = document.getElementById("listDataset");
+    tbody.innerHTML = "";
+
+    // Hitung pagination
+    const totalItems = filteredDatasets.length;
+    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
+    if (currentPageList > totalPages) currentPageList = totalPages;
+
+    const start = (currentPageList - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    const pageDatasets = filteredDatasets.slice(start, end);
+
+    pageDatasets.forEach(ds => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${ds.id}</td>
+            <td>
+                <span class="nama">${ds.nama}</span>
+                <button class="btn-edit" onclick="renameDataset('${ds.id}')">✏️</button>
+            </td>
+            <td>${ds.jumlahData}</td>
+            <td>${ds.tanggalUpload}</td>
+            <td>
+                <button onclick="tampilDataset('${ds.id}')">Lihat</button>
+                <button class="btn-delete" onclick="hapusDataset('${ds.id}')">🗑️</button>
+            </td>
+        `;
+        tbody.appendChild(row);
     });
 
-    const current = document.getElementById(menuId);
-    current.style.display = (current.style.display === "block") ? "none" : "block";
+    // Render tombol pagination
+    renderPaginationList(totalPages);
 }
 
-/* SEARCH DATASET */
+// Tombol pagination daftar dataset
+function renderPaginationList(totalPages) {
+    const container = document.getElementById("paginationList");
+    container.innerHTML = "";
+
+    if (totalPages <= 1) return;
+
+    const prevBtn = document.createElement("button");
+    prevBtn.textContent = "← Sebelumnya";
+    prevBtn.disabled = currentPageList === 1;
+    prevBtn.onclick = () => {
+        if (currentPageList > 1) {
+            currentPageList--;
+            searchDataset(); // re-render dengan filter saat ini
+        }
+    };
+
+    const nextBtn = document.createElement("button");
+    nextBtn.textContent = "Berikutnya →";
+    nextBtn.disabled = currentPageList === totalPages;
+    nextBtn.onclick = () => {
+        if (currentPageList < totalPages) {
+            currentPageList++;
+            searchDataset();
+        }
+    };
+
+    const pageInfo = document.createElement("span");
+    pageInfo.textContent = `Halaman ${currentPageList} dari ${totalPages}`;
+
+    container.appendChild(prevBtn);
+    container.appendChild(pageInfo);
+    container.appendChild(nextBtn);
+}
+
+// Fungsi pencarian (hanya berdasarkan nama)
 function searchDataset() {
-    let input = document.getElementById("searchInput").value.toLowerCase();
-    let rows = document.querySelectorAll("#listDataset tr");
-
-    rows.forEach(row => {
-        let nama = row.querySelector(".nama").innerText.toLowerCase();
-
-        if (nama.includes(input)) {
-            row.style.display = "";
-        } else {
-            row.style.display = "none";
-        }
-    });
+    const input = document.getElementById("searchInput").value.toLowerCase();
+    const filtered = datasets.filter(ds => ds.nama.toLowerCase().includes(input));
+    currentPageList = 1; // reset ke halaman pertama
+    renderDatasetList(filtered);
 }
 
-/* HAPUS DATASET */
-function hapusDataset(button) {
-    if (confirm("Yakin ingin menghapus dataset ini?")) {
-        let row = button.parentElement.parentElement;
-        row.remove();
+// Rename dataset (menggunakan prompt)
+function renameDataset(id) {
+    const dataset = datasets.find(ds => ds.id === id);
+    if (!dataset) return;
+
+    const newName = prompt("Masukkan nama baru untuk dataset:", dataset.nama);
+    if (newName && newName.trim() !== "") {
+        dataset.nama = newName.trim();
+        // Render ulang dengan tetap menghormati filter pencarian
+        searchDataset();
     }
 }
 
-/* Upload */
-function uploadCSV() {
-    let file = document.getElementById("fileCSV").files[0];
-    let status = document.getElementById("statusUpload");
+// Hapus dataset
+function hapusDataset(id) {
+    if (!confirm("Yakin ingin menghapus dataset ini?")) return;
 
-    if (!file) {
+    datasets = datasets.filter(ds => ds.id !== id);
+    // Jika dataset yang dibuka detailnya dihapus, sembunyikan detail
+    if (datasetDetailId === id) {
+        document.getElementById("detailDataset").style.display = "none";
+        datasetDetailId = null;
+    }
+    searchDataset(); // render ulang
+}
+
+// Upload simulasi
+function uploadCSV() {
+    const fileInput = document.getElementById("fileCSV");
+    const status = document.getElementById("statusUpload");
+
+    if (!fileInput.files[0]) {
         status.innerHTML = "⚠️ Pilih file CSV terlebih dahulu";
         return;
     }
 
     status.innerHTML = "⏳ Uploading...";
 
+    // Simulasi: tambahkan dataset baru setelah 1 detik
     setTimeout(() => {
-        status.innerHTML = "✅ Dataset berhasil diupload";
+        const newId = "D" + String(datasets.length + 1).padStart(2, "0");
+        const newDataset = {
+            id: newId,
+            nama: `Dataset Baru ${datasets.length + 1}`,
+            jumlahData: Math.floor(Math.random() * 200) + 10,
+            tanggalUpload: new Date().toISOString().split("T")[0],
+            dataKalimat: []  // nanti isi dari API
+        };
+        datasets.push(newDataset);
+        status.innerHTML = `✅ Dataset "${newDataset.nama}" berhasil diupload`;
+        fileInput.value = "";
+        searchDataset();
     }, 1000);
 }
 
-/* DATA SIMULASI */
-const datasetData = {
-    D01: [
-        { no: 1, kalimat: "Pendidikan gratis sangat membantu", label: "Senang" },
-        { no: 2, kalimat: "Biaya sekolah masih mahal", label: "Sedih" }
-    ],
-    D02: [
-        { no: 1, kalimat: "Anggaran tidak merata", label: "Marah" },
-        { no: 2, kalimat: "Fasilitas sekolah kurang", label: "Sedih" }
-    ]
-};
-
-/* TAMPILKAN DETAIL */
+// Tampilkan detail dataset dengan pagination
 function tampilDataset(id) {
-    let detail = document.getElementById("detailDataset");
-    let isi = document.getElementById("isiDataset");
-    let judul = document.getElementById("judulDataset");
+    const dataset = datasets.find(ds => ds.id === id);
+    if (!dataset) return;
 
-    detail.style.display = "block";
-    judul.innerHTML = "Detail Dataset: " + id;
+    datasetDetailId = id;
+    document.getElementById("detailDataset").style.display = "block";
+    document.getElementById("judulDataset").textContent = `Detail Dataset: ${dataset.nama}`;
 
-    isi.innerHTML = "";
-
-    datasetData[id].forEach(item => {
-        isi.innerHTML += `
-            <tr>
-                <td>${item.no}</td>
-                <td>${item.kalimat}</td>
-                <td>${item.label}</td>
-            </tr>
-        `;
-    });
+    currentPageDetail = 1;
+    renderDetailPage(dataset);
 }
+
+function renderDetailPage(dataset) {
+    const tbody = document.getElementById("isiDataset");
+    tbody.innerHTML = "";
+
+    const data = dataset.dataKalimat;
+    const totalItems = data.length;
+    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
+    if (currentPageDetail > totalPages) currentPageDetail = totalPages;
+
+    const start = (currentPageDetail - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    const pageData = data.slice(start, end);
+
+    pageData.forEach(item => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${item.no}</td>
+            <td>${item.kalimat}</td>
+            <td>${item.label}</td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    // Render pagination detail
+    renderPaginationDetail(totalPages, dataset.id);
+}
+
+function renderPaginationDetail(totalPages, datasetId) {
+    const container = document.getElementById("paginationDetail");
+    container.innerHTML = "";
+
+    if (totalPages <= 1) return;
+
+    const prevBtn = document.createElement("button");
+    prevBtn.textContent = "← Sebelumnya";
+    prevBtn.disabled = currentPageDetail === 1;
+    prevBtn.onclick = () => {
+        if (currentPageDetail > 1) {
+            currentPageDetail--;
+            const ds = datasets.find(d => d.id === datasetDetailId);
+            if (ds) renderDetailPage(ds);
+        }
+    };
+
+    const nextBtn = document.createElement("button");
+    nextBtn.textContent = "Berikutnya →";
+    nextBtn.disabled = currentPageDetail === totalPages;
+    nextBtn.onclick = () => {
+        if (currentPageDetail < totalPages) {
+            currentPageDetail++;
+            const ds = datasets.find(d => d.id === datasetDetailId);
+            if (ds) renderDetailPage(ds);
+        }
+    };
+
+    const pageInfo = document.createElement("span");
+    pageInfo.textContent = `Halaman ${currentPageDetail} dari ${totalPages}`;
+
+    container.appendChild(prevBtn);
+    container.appendChild(pageInfo);
+    container.appendChild(nextBtn);
+}
+
+// Toggle sidebar (biarkan sama)
+function toggleMenu(menuId) {
+    const menus = document.querySelectorAll('.submenu');
+    menus.forEach(menu => {
+        if (menu.id !== menuId) {
+            menu.style.display = "none";
+        }
+    });
+    const current = document.getElementById(menuId);
+    current.style.display = (current.style.display === "block") ? "none" : "block";
+}
+
+// ==================== INITIAL RENDER ====================
+window.onload = function() {
+    renderDatasetList();
+};
 </script>
 
 </body>
