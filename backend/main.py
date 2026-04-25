@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import login_admin, predict, upload_csv, dashboard_admin, dataset_admin
 from utils.text_cleaning import clean_text
+from routers import preprocessing_admin
 
 # Inisialisasi model hanya sekali
 MODEL_READY = False
@@ -26,7 +27,10 @@ try:
 except Exception as e:
     print(f"⚠️ Model tidak bisa dimuat: {e}")
 
-app = FastAPI(title="EduSentiment AI Backend")
+app = FastAPI(
+    title="EduSentiment AI Backend",
+    max_request_body_size=100_000_000  # 100 MB (sesuaikan dengan kebutuhan)
+)
 
 # CORS
 app.add_middleware(
@@ -43,6 +47,7 @@ app.include_router(predict.router)
 app.include_router(upload_csv.router)
 app.include_router(dashboard_admin.router)
 app.include_router(dataset_admin.router)   # <-- Ini yang baru
+app.include_router(preprocessing_admin.router)
 
 @app.get("/")
 def root():

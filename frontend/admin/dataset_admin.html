@@ -47,9 +47,9 @@
 
     <!-- UPLOAD -->
     <div class="bg-white p-5 rounded-lg shadow-md mb-6">
-        <h3 class="text-lg font-semibold text-gray-700 mb-3">Upload Dataset CSV</h3>
+        <h3 class="text-lg font-semibold text-gray-700 mb-3">Upload Dataset CSV / Excel</h3>
         <div class="flex items-center gap-3 flex-wrap">
-            <input type="file" id="fileCSV" accept=".csv" class="border border-gray-300 rounded-md p-2 text-sm">
+            <input type="file" id="fileCSV" accept=".csv, .xlsx" class="border border-gray-300 rounded-md p-2 text-sm">
             <button onclick="uploadCSV()" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition-colors">Upload</button>
         </div>
         <p id="statusUpload" class="mt-3 text-sm"></p>
@@ -189,28 +189,29 @@ function renderFilteredDatasetList() {
     const tbody = document.getElementById("listDataset");
     tbody.innerHTML = "";
 
-    pageDatasets.forEach(ds => {
-        const row = document.createElement("tr");
-        row.className = "even:bg-gray-50";
-        row.innerHTML = `
-            <td class="p-2 text-center">${ds.id}</td>
-            <td class="p-2 text-center">
-                <span class="nama">${ds.name}</span>
-                <button onclick="renameDataset(${ds.id})" class="ml-2 text-blue-500 hover:text-blue-700" title="Ganti nama">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                </button>
-            </td>
-            <td class="p-2 text-center">${ds.jumlah_data}</td>
-            <td class="p-2 text-center">${ds.tanggal_upload}</td>
-            <td class="p-2 text-center">
-                <button onclick="tampilDataset(${ds.id})" class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-md mr-1 transition-colors">Lihat</button>
-                <button onclick="hapusDataset(${ds.id})" class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-1 px-3 rounded-md transition-colors">🗑️</button>
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
+    pageDatasets.forEach((ds, index) => {
+    const row = document.createElement("tr");
+    row.className = "even:bg-gray-50";
+    const noUrut = (currentPageList - 1) * ITEMS_PER_PAGE + index + 1;
+    row.innerHTML = `
+        <td class="p-2 text-center">${noUrut}</td>
+        <td class="p-2 text-center">
+            <span class="nama">${ds.name}</span>
+            <button onclick="renameDataset(${ds.id})" class="ml-2 text-blue-500 hover:text-blue-700" title="Ganti nama">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+            </button>
+        </td>
+        <td class="p-2 text-center">${ds.jumlah_data}</td>
+        <td class="p-2 text-center">${ds.tanggal_upload}</td>
+        <td class="p-2 text-center">
+            <button onclick="tampilDataset(${ds.id})" class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-md mr-1 transition-colors">Lihat</button>
+            <button onclick="hapusDataset(${ds.id})" class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-1 px-3 rounded-md transition-colors">🗑️</button>
+        </td>
+    `;
+    tbody.appendChild(row);
+});
 
     renderPaginationList(totalPages);
 }
@@ -310,7 +311,7 @@ async function uploadCSV() {
         return;
     }
 
-    const defaultName = fileInput.files[0].name.replace(/\.csv$/i, "");
+    const defaultName = fileInput.files[0].name.replace(/\.(csv|xlsx)$/i, "");
     const newName = prompt("Masukkan nama dataset:", defaultName);
     if (!newName || newName.trim() === "") {
         status.innerHTML = "⚠️ Nama dataset tidak boleh kosong";
@@ -371,16 +372,17 @@ function renderDetailItems(items, total) {
     const totalPages = Math.ceil(total / ITEMS_PER_PAGE) || 1;
     if (currentPageDetail > totalPages) currentPageDetail = totalPages;
 
-    items.forEach(item => {
-        const row = document.createElement("tr");
-        row.className = "even:bg-gray-50";
-        row.innerHTML = `
-            <td class="p-2 text-center">${item.id}</td>
-            <td class="p-2">${item.text}</td>
-            <td class="p-2 text-center">${item.label ?? "-"}</td>
-        `;
-        tbody.appendChild(row);
-    });
+    items.forEach((item, index) => {
+    const row = document.createElement("tr");
+    row.className = "even:bg-gray-50";
+    const noUrut = (currentPageDetail - 1) * ITEMS_PER_PAGE + index + 1;
+    row.innerHTML = `
+        <td class="p-2 text-center">${noUrut}</td>
+        <td class="p-2">${item.text}</td>
+        <td class="p-2 text-center">${item.label ?? "-"}</td>
+    `;
+    tbody.appendChild(row);
+});
 
     renderPaginationDetail(totalPages);
 }

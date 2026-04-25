@@ -9,12 +9,12 @@ from datetime import date
 
 router = APIRouter(prefix="/api/datasets", tags=["Dataset Admin"])
 
-# Skema response
+# ---------- Skema ----------
 class DatasetOut(BaseModel):
     id: int
     name: str
     jumlah_data: int
-    tanggal_upload: str  # date sebagai string
+    tanggal_upload: str
 
 class DatasetItemOut(BaseModel):
     id: int
@@ -27,34 +27,55 @@ class PaginatedItems(BaseModel):
     page: int
     per_page: int
 
-# Endpoint upload CSV
+# ---------- Upload CSV / Excel ----------
 @router.post("/upload")
 async def upload_dataset(
     file: UploadFile = File(...),
     name: str = Form(...),
     admin=Depends(get_current_admin)
 ):
-    # Baca file CSV
+    filename = file.filename.lower()
+    if not filename.endswith(('.csv', '.xlsx')):
+        raise HTTPException(status_code=400, detail="Format file harus CSV atau XLSX")
+
     content = await file.read()
-    try:
-        df = pd.read_csv(io.StringIO(content.decode("utf-8")), sep=None, engine="python")
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Gagal membaca CSV: {str(e)}")
+
+    # --- Baca file sesuai tipe ---
+    if filename.endswith('.csv'):
+        # Coba beberapa encoding umum
+        encodings = ['utf-8', 'latin-1', 'windows-1252', 'iso-8859-1']
+        df = None
+        for enc in encodings:
+            try:
+                df = pd.read_csv(io.BytesIO(content), sep=None, engine='python', encoding=enc)
+                break
+            except (UnicodeDecodeError, pd.errors.ParserError):
+                continue
+
+        if df is None:
+            # Fallback dengan chardet jika tersedia
+            try:
+                import chardet
+                detected = chardet.detect(content)
+                enc = detected['encoding'] or 'utf-8'
+                df = pd.read_csv(io.BytesIO(content), sep=None, engine='python', encoding=enc)
+            except Exception:
+                raise HTTPException(status_code=400, detail="Gagal membaca CSV, encoding tidak didukung")
+    else:  # .xlsx
+        try:
+            df = pd.read_excel(io.BytesIO(content), engine='openpyxl')
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Gagal membaca Excel: {str(e)}")
 
     if df.empty:
-        raise HTTPException(status_code=400, detail="CSV kosong")
+        raise HTTPException(status_code=400, detail="File kosong atau tidak memiliki data")
 
-    # Ambil kolom pertama sebagai teks, kolom kedua sebagai label jika ada
+    # Kolom pertama = teks, kolom kedua (jika ada) = label
     cols = df.columns.tolist()
-    if len(cols) >= 2:
-        text_col = cols[0]
-        label_col = cols[1]
-    else:
-        text_col = cols[0]
-        label_col = None
+    text_col = cols[0]
+    label_col = cols[1] if len(cols) > 1 else None
 
     jumlah = len(df)
-
     supabase = get_supabase()
 
     # Insert dataset
@@ -66,62 +87,68 @@ async def upload_dataset(
     res = supabase.table("datasets").insert(dataset_data).execute()
     dataset_id = res.data[0]["id"]
 
-    # Insert items
-    items_to_insert = []
+    # Insert items dalam batch (500 per request)
+    BATCH_SIZE = 500
+    items_batch = []
     for _, row in df.iterrows():
         text = str(row[text_col]).strip()
         if not text:
             continue
-        label = str(row[label_col]).strip() if label_col and not pd.isna(row[label_col]) else None
-        items_to_insert.append({
+        label = None
+        if label_col and not pd.isna(row[label_col]):
+            label = str(row[label_col]).strip()
+        items_batch.append({
             "dataset_id": dataset_id,
             "text": text,
             "label": label
         })
+        if len(items_batch) >= BATCH_SIZE:
+            supabase.table("dataset_items").insert(items_batch).execute()
+            items_batch.clear()
 
-    if items_to_insert:
-        supabase.table("dataset_items").insert(items_to_insert).execute()
+    # Sisa batch
+    if items_batch:
+        supabase.table("dataset_items").insert(items_batch).execute()
 
     return {"message": "Dataset berhasil diupload", "dataset_id": dataset_id}
 
-# List datasets
+# ---------- List semua dataset ----------
 @router.get("/", response_model=List[DatasetOut])
 async def list_datasets(admin=Depends(get_current_admin)):
     supabase = get_supabase()
     res = supabase.table("datasets").select("*").order("created_at", desc=True).execute()
-    datasets = []
-    for row in res.data:
-        datasets.append(DatasetOut(
+    return [
+        DatasetOut(
             id=row["id"],
             name=row["name"],
             jumlah_data=row["jumlah_data"],
             tanggal_upload=str(row["tanggal_upload"])
-        ))
-    return datasets
+        )
+        for row in res.data
+    ]
 
-# Rename dataset
+# ---------- Rename dataset ----------
 @router.put("/{dataset_id}/rename")
 async def rename_dataset(dataset_id: int, name: str = Form(...), admin=Depends(get_current_admin)):
     supabase = get_supabase()
-    # Cek ada dataset
     res = supabase.table("datasets").select("id").eq("id", dataset_id).execute()
     if not res.data:
         raise HTTPException(status_code=404, detail="Dataset tidak ditemukan")
     supabase.table("datasets").update({"name": name.strip()}).eq("id", dataset_id).execute()
     return {"message": "Nama dataset berhasil diubah"}
 
-# Hapus dataset
+# ---------- Hapus dataset ----------
 @router.delete("/{dataset_id}")
 async def delete_dataset(dataset_id: int, admin=Depends(get_current_admin)):
     supabase = get_supabase()
     res = supabase.table("datasets").select("id").eq("id", dataset_id).execute()
     if not res.data:
         raise HTTPException(status_code=404, detail="Dataset tidak ditemukan")
-    # Hapus items dulu (cascade akan menghapus otomatis jika sudah diset)
+    # Hapus dataset (cascade akan menghapus items terkait)
     supabase.table("datasets").delete().eq("id", dataset_id).execute()
     return {"message": "Dataset berhasil dihapus"}
 
-# Ambil items dataset dengan paginasi
+# ---------- Ambil items dataset dengan paginasi ----------
 @router.get("/{dataset_id}/items", response_model=PaginatedItems)
 async def get_dataset_items(
     dataset_id: int,
@@ -130,21 +157,17 @@ async def get_dataset_items(
     admin=Depends(get_current_admin)
 ):
     supabase = get_supabase()
-
-    # Cek dataset ada
     ds = supabase.table("datasets").select("id").eq("id", dataset_id).execute()
     if not ds.data:
         raise HTTPException(status_code=404, detail="Dataset tidak ditemukan")
 
-    # Hitung total
+    # Total items
     count_res = supabase.table("dataset_items").select("id", count="exact").eq("dataset_id", dataset_id).execute()
     total = count_res.count if count_res.count else 0
 
-    # Ambil halaman
     start = (page - 1) * per_page
     items_res = supabase.table("dataset_items").select("*").eq("dataset_id", dataset_id)\
                 .range(start, start + per_page - 1).order("id").execute()
 
     items = [DatasetItemOut(id=it["id"], text=it["text"], label=it.get("label")) for it in items_res.data]
-
     return PaginatedItems(items=items, total=total, page=page, per_page=per_page)

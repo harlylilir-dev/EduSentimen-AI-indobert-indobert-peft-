@@ -2,175 +2,183 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Preprocessing - EduSentiment</title>
-    <link rel="stylesheet" href="../assets/css/style_preprocessing_admin.css">
-    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .submenu { transition: all 0.3s ease; }
+    </style>
 </head>
-<body>
+<body class="bg-gray-100 font-sans">
 
-<div class="navbar">
-    <div class="nav-left">
-        <h2>Admin Panel</h2>
+<!-- NAVBAR -->
+<nav class="fixed top-0 left-0 w-full h-14 bg-gray-800 text-white flex items-center justify-between px-5 z-50">
+    <div class="text-xl font-bold">Admin Panel</div>
+    <div>
+        <a href="login_admin.html" class="bg-white text-gray-800 font-bold py-2 px-4 rounded-md hover:bg-gray-200 transition-colors">Logout</a>
     </div>
-    <div class="nav-right">
-        <a href="login_admin.html" class="btn-logout">Logout</a>
+</nav>
+
+<!-- SIDEBAR -->
+<aside class="fixed left-0 top-14 h-[calc(100vh-3.5rem)] w-56 bg-gray-700 text-white overflow-y-auto pt-2">
+    <a href="dashboard_admin.html" class="block py-3 px-5 hover:bg-teal-500 transition-colors">Dashboard</a>
+    <a href="dataset_admin.html" class="block py-3 px-5 hover:bg-teal-500 transition-colors">Dataset</a>
+    <a href="preprocessing_admin.html" class="block py-3 px-5 hover:bg-teal-500 transition-colors">Pre-Processing</a>
+
+    <div class="py-3 px-5 hover:bg-teal-500 transition-colors cursor-pointer flex items-center justify-between" onclick="toggleMenu('processMenu')">
+        <span>Processing</span>
+        <svg class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
     </div>
-</div>
-
-<div class="sidebar">
-    <a href="dashboard_admin.html">Dashboard</a>
-    <a href="dataset_admin.html">Dataset</a>
-    <a href="preprocessing_admin.html">Pre-Processing</a>
-
-    <div class="menu-item" onclick="toggleMenu('processMenu')">Processing ▾</div>
-    <div class="submenu" id="processMenu">
-        <a href="pengaturan_admin.html">Pengaturan</a>
-        <a href="pelatihanmodel_admin.html">Pelatihan Model</a>
-    </div>
-
-    <a href="testing_admin.html">Testing</a>
-    <a href="evaluasi_admin.html">Evaluasi</a>
-</div>
-
-<div class="content">
-
-    <h1>Preprocessing Data</h1>
-
-    <!-- UPLOAD -->
-    <div class="card">
-        <h3>Upload Dataset CSV / Excel</h3>
-
-        <!-- ✅ FIX INPUT -->
-        <input type="file" id="fileCSV" accept=".csv, .xlsx">
-        <button onclick="prosesPreprocessing()">Proses</button>
-
-        <p id="status"></p>
+    <div class="submenu hidden bg-gray-600" id="processMenu">
+        <a href="pengaturan_admin.html" class="block py-2 pl-10 pr-5 hover:bg-teal-500 transition-colors text-sm">Pengaturan</a>
+        <a href="pelatihanmodel_admin.html" class="block py-2 pl-10 pr-5 hover:bg-teal-500 transition-colors text-sm">Pelatihan Model</a>
     </div>
 
-    <!-- PREVIEW -->
-    <div class="card">
-        <h3>Preview Hasil Preprocessing</h3>
+    <a href="testing_admin.html" class="block py-3 px-5 hover:bg-teal-500 transition-colors">Testing</a>
+    <a href="evaluasi_admin.html" class="block py-3 px-5 hover:bg-teal-500 transition-colors">Evaluasi</a>
+</aside>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>No</th>
-                    <th>Kalimat Asli</th>
-                    <th>Hasil Cleaning</th>
-                </tr>
-            </thead>
-            <tbody id="hasilTable">
-                <tr>
-                    <td colspan="3">Belum ada data</td>
-                </tr>
-            </tbody>
-        </table>
+<!-- CONTENT -->
+<main class="ml-56 mt-14 p-6 min-h-screen">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Preprocessing Data</h1>
+
+    <!-- PILIH DATASET -->
+    <div class="bg-white p-5 rounded-lg shadow-md mb-6">
+        <h3 class="text-lg font-semibold text-gray-700 mb-3">Pilih Dataset</h3>
+        <div class="flex items-center gap-3 flex-wrap">
+            <select id="datasetSelect" class="border border-gray-300 rounded-md p-2 text-sm w-full sm:w-1/2">
+                <option value="">-- Pilih Dataset --</option>
+            </select>
+            <button onclick="prosesPreprocessing()" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition-colors">Proses</button>
+        </div>
+        <p id="status" class="mt-3 text-sm"></p>
     </div>
 
     <!-- DOWNLOAD -->
-    <div class="card">
-        <h3>Download Hasil</h3>
-        <button onclick="downloadCSV()">Download CSV</button>
+    <div class="bg-white p-5 rounded-lg shadow-md">
+        <h3 class="text-lg font-semibold text-gray-700 mb-3">Download Hasil</h3>
+        <button onclick="downloadCSV()" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md transition-colors">Download CSV</button>
     </div>
-
-</div>
+</main>
 
 <script>
-
+// Konfigurasi
+const BASE_URL = "http://localhost:8000/api";
+let token = localStorage.getItem("token");
 let hasilData = [];
 
-/* SIDEBAR */
-function toggleMenu(menuId) {
-    document.querySelectorAll('.submenu').forEach(menu => {
-        if (menu.id !== menuId) menu.style.display = "none";
-    });
-
-    let current = document.getElementById(menuId);
-    current.style.display = current.style.display === "block" ? "none" : "block";
+// Helper fetch dengan auth
+async function fetchWithAuth(url, options = {}) {
+    if (!token) {
+        alert("Silakan login terlebih dahulu.");
+        window.location.href = "login_admin.html";
+        throw new Error("Tidak ada token");
+    }
+    const headers = {
+        "Authorization": `Bearer ${token}`,
+    };
+    if (!(options.body instanceof FormData)) {
+        headers["Content-Type"] = "application/json";
+    }
+    const response = await fetch(url, { ...options, headers });
+    if (response.status === 401) {
+        localStorage.removeItem("token");
+        alert("Sesi berakhir. Silakan login kembali.");
+        window.location.href = "login_admin.html";
+        throw new Error("Unauthorized");
+    }
+    if (!response.ok) {
+        let errMsg = `Gagal melakukan request (${response.status})`;
+        try { const err = await response.json(); errMsg = err.detail || errMsg; } catch(e) {}
+        throw new Error(errMsg);
+    }
+    return response.json();
 }
 
-/* ================= PROSES (FIX KE PYTHON) ================= */
+// Load dataset list untuk dropdown
+async function loadDatasets() {
+    try {
+        const datasets = await fetchWithAuth(`${BASE_URL}/datasets/`);
+        const select = document.getElementById("datasetSelect");
+        select.innerHTML = '<option value="">-- Pilih Dataset --</option>';
+        datasets.forEach(ds => {
+            const option = document.createElement("option");
+            option.value = ds.id;
+            option.textContent = `${ds.name} (${ds.jumlah_data} data)`;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error(error);
+        alert("Gagal memuat daftar dataset: " + error.message);
+    }
+}
+
+// Proses preprocessing dataset yang dipilih (tanpa menampilkan tabel)
 async function prosesPreprocessing() {
+    const select = document.getElementById("datasetSelect");
+    const datasetId = select.value;
+    const status = document.getElementById("status");
 
-    let file = document.getElementById("fileCSV").files[0];
-    let status = document.getElementById("status");
-    let table = document.getElementById("hasilTable");
-
-    if (!file) {
-        status.innerHTML = "⚠️ Pilih file terlebih dahulu";
+    if (!datasetId) {
+        status.innerHTML = "⚠️ Pilih dataset terlebih dahulu";
+        status.className = "mt-3 text-sm text-yellow-600";
         return;
     }
 
-    status.innerHTML = "⏳ Mengirim ke server Python...";
-
-    let formData = new FormData();
-    formData.append("file", file);
+    status.innerHTML = "⏳ Memproses... (data tidak ditampilkan di layar)";
+    status.className = "mt-3 text-sm text-blue-600";
 
     try {
+        const data = await fetchWithAuth(`${BASE_URL}/preprocess/${datasetId}`);
+        hasilData = data; // Simpan untuk download, tapi tidak dirender sebagai tabel
 
-        const response = await fetch("http://127.0.0.1:5000/preprocess", {
-            method: "POST",
-            body: formData
-        });
-
-        if (!response.ok) {
-        const err = await response.json();
-        status.innerHTML = "❌ " + err.error;
-        return;
-    }
-
-        const result = await response.json();
-        const data = result.data; // 🔥 FIX UTAMA
-
-        console.log("HASIL:", result);
-
-        hasilData = [];
-        table.innerHTML = "";
-
-        data.forEach((row, i) => {
-
-            hasilData.push(row);
-
-            table.innerHTML += `
-                <tr>
-                    <td>${i + 1}</td>
-                    <td>${row.teks}</td>
-                    <td>${row.cleaned}</td>
-                </tr>
-            `;
-        });
-
-        status.innerHTML = `✅ Preprocessing selesai (${data.length} data)`;
-
-    } catch (err) {
-        console.error("ERROR:", err);
-        status.innerHTML = "❌ Gagal koneksi ke Python API";
+        status.innerHTML = `✅ Preprocessing selesai (${data.length} data). Klik "Download CSV" untuk menyimpan.`;
+        status.className = "mt-3 text-sm text-green-600";
+    } catch (error) {
+        console.error(error);
+        status.innerHTML = `❌ ${error.message}`;
+        status.className = "mt-3 text-sm text-red-600";
     }
 }
 
-/* ================= DOWNLOAD ================= */
+// Download CSV
 function downloadCSV() {
-
     if (hasilData.length === 0) {
-        alert("Tidak ada data");
+        alert("Tidak ada data untuk diunduh");
         return;
     }
-
     let csv = "teks,cleaned\n";
-
     hasilData.forEach(row => {
-        csv += `"${row.teks}","${row.cleaned}"\n`;
+        // Escape double quote
+        csv += `"${row.teks.replace(/"/g, '""')}","${row.cleaned.replace(/"/g, '""')}"\n`;
     });
-
-    let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    let url = URL.createObjectURL(blob);
-
-    let a = document.createElement("a");
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
     a.href = url;
     a.download = "hasil_preprocessing.csv";
     a.click();
+    URL.revokeObjectURL(url);
 }
 
+// Sidebar toggle
+function toggleMenu(menuId) {
+    const menus = document.querySelectorAll('.submenu');
+    menus.forEach(menu => {
+        if (menu.id !== menuId) menu.classList.add('hidden');
+    });
+    const current = document.getElementById(menuId);
+    current.classList.toggle('hidden');
+}
+
+// Inisialisasi
+window.onload = function () {
+    if (!token) {
+        window.location.href = "login_admin.html";
+        return;
+    }
+    loadDatasets();
+};
 </script>
 
 </body>
