@@ -5,8 +5,8 @@ app = Flask(__name__)
 CORS(app)
 
 # 🔥 IMPORT ROUTE
-from backend.routes.train import train_bp
-from backend.routes.preprocess import preprocess_bp
+from routes.train import train_bp
+from routes.preprocess import preprocess_bp
 
 # 🔥 REGISTER
 app.register_blueprint(train_bp)

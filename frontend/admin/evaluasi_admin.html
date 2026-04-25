@@ -2,83 +2,89 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evaluasi Model - EduSentiment</title>
-    <link rel="stylesheet" href="../assets/css/style_evaluasi_admin.css">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .submenu {
+            transition: all 0.3s ease;
+        }
+    </style>
 </head>
-<body>
+<body class="bg-gray-100 font-sans">
 
 <!-- NAVBAR -->
-<div class="navbar">
-    <div class="nav-left">
-        <h2>Admin Panel</h2>
+<nav class="fixed top-0 left-0 w-full h-14 bg-gray-800 text-white flex items-center justify-between px-5 z-50">
+    <div class="text-xl font-bold">Admin Panel</div>
+    <div>
+        <a href="login_admin.html" class="bg-white text-gray-800 font-bold py-2 px-4 rounded-md hover:bg-gray-200 transition-colors">Logout</a>
     </div>
-    <div class="nav-right">
-        <a href="login_admin.html" class="btn-logout">Logout</a>
-    </div>
-</div>
+</nav>
 
 <!-- SIDEBAR -->
-<div class="sidebar">
-    <a href="dashboard_admin.html">Dashboard</a>
-    <a href="dataset_admin.html">Dataset</a>
-    <a href="preprocessing_admin.html">Pre-Processing</a>
+<aside class="fixed left-0 top-14 h-[calc(100vh-3.5rem)] w-56 bg-gray-700 text-white overflow-y-auto pt-2">
+    <a href="dashboard_admin.html" class="block py-3 px-5 hover:bg-teal-500 transition-colors">Dashboard</a>
+    <a href="dataset_admin.html" class="block py-3 px-5 hover:bg-teal-500 transition-colors">Dataset</a>
+    <a href="preprocessing_admin.html" class="block py-3 px-5 hover:bg-teal-500 transition-colors">Pre-Processing</a>
 
-    <div class="menu-item" onclick="toggleMenu('processMenu')">Processing ▾</div>
-    <div class="submenu" id="processMenu">
-        <a href="pengaturan_admin.html">Pengaturan</a>
-        <a href="pelatihanmodel_admin.html">Pelatihan Model</a>
+    <div class="py-3 px-5 hover:bg-teal-500 transition-colors cursor-pointer flex items-center justify-between" onclick="toggleMenu('processMenu')">
+        <span>Processing</span>
+        <svg class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+    </div>
+    <div class="submenu hidden bg-gray-600" id="processMenu">
+        <a href="pengaturan_admin.html" class="block py-2 pl-10 pr-5 hover:bg-teal-500 transition-colors text-sm">Pengaturan</a>
+        <a href="pelatihanmodel_admin.html" class="block py-2 pl-10 pr-5 hover:bg-teal-500 transition-colors text-sm">Pelatihan Model</a>
     </div>
 
-    <a href="testing_admin.html">Testing</a>
-    <a href="evaluasi_admin.html">Evaluasi</a>
-</div>
+    <a href="testing_admin.html" class="block py-3 px-5 hover:bg-teal-500 transition-colors">Testing</a>
+    <a href="evaluasi_admin.html" class="block py-3 px-5 hover:bg-teal-500 transition-colors">Evaluasi</a>
+</aside>
 
 <!-- CONTENT -->
-<div class="content">
-
-    <h1>Evaluasi Model</h1>
+<main class="ml-56 mt-14 p-6 min-h-screen">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Evaluasi Model</h1>
 
     <!-- METRIK -->
-    <div class="card">
-        <h3>Evaluasi Kinerja Model</h3>
-        <p>Akurasi: <strong>85%</strong></p>
-        <p>Precision: <strong>0.84</strong></p>
-        <p>Recall: <strong>0.83</strong></p>
-        <p>F1-Score: <strong>0.83</strong></p>
+    <div class="bg-white p-5 rounded-lg shadow-md mb-6">
+        <h3 class="text-lg font-semibold text-gray-700 mb-3">Evaluasi Kinerja Model</h3>
+        <p class="text-gray-700">Akurasi: <strong>85%</strong></p>
+        <p class="text-gray-700">Precision: <strong>0.84</strong></p>
+        <p class="text-gray-700">Recall: <strong>0.83</strong></p>
+        <p class="text-gray-700">F1-Score: <strong>0.83</strong></p>
     </div>
 
     <!-- CONFUSION MATRIX -->
-    <div class="card">
-        <h3>Confusion Matrix</h3>
-        <canvas id="matrixCanvas" width="300" height="300"></canvas>
+    <div class="bg-white p-5 rounded-lg shadow-md mb-6">
+        <h3 class="text-lg font-semibold text-gray-700 mb-3">Confusion Matrix</h3>
+        <canvas id="matrixCanvas" width="300" height="300" class="block mx-auto max-w-full border border-gray-200 rounded"></canvas>
     </div>
 
     <!-- GRAFIK -->
-    <div class="card">
-        <h3>Grafik Performa Model</h3>
-        <canvas id="chartCanvas" height="200"></canvas>
+    <div class="bg-white p-5 rounded-lg shadow-md mb-6">
+        <h3 class="text-lg font-semibold text-gray-700 mb-3">Grafik Performa Model</h3>
+        <canvas id="chartCanvas" height="200" class="block mx-auto max-w-full"></canvas>
     </div>
 
     <!-- ANALISIS -->
-    <div class="card">
-        <h3>Analisis Model</h3>
-        <p>- Model memiliki performa baik pada kelas "Senang".</p>
-        <p>- Masih terdapat kesalahan klasifikasi pada "Sedih" dan "Marah".</p>
-        <p>- Disarankan menambah dataset untuk meningkatkan performa.</p>
+    <div class="bg-white p-5 rounded-lg shadow-md mb-6">
+        <h3 class="text-lg font-semibold text-gray-700 mb-3">Analisis Model</h3>
+        <p class="text-gray-700">- Model memiliki performa baik pada kelas "Senang".</p>
+        <p class="text-gray-700">- Masih terdapat kesalahan klasifikasi pada "Sedih" dan "Marah".</p>
+        <p class="text-gray-700">- Disarankan menambah dataset untuk meningkatkan performa.</p>
     </div>
-
-</div>
+</main>
 
 <!-- SCRIPT -->
 <script>
 function toggleMenu(menuId) {
     const menus = document.querySelectorAll('.submenu');
     menus.forEach(menu => {
-        if (menu.id !== menuId) menu.style.display = "none";
+        if (menu.id !== menuId) menu.classList.add('hidden');
     });
 
     const current = document.getElementById(menuId);
-    current.style.display = (current.style.display === "block") ? "none" : "block";
+    current.classList.toggle('hidden');
 }
 
 /* CONFUSION MATRIX */

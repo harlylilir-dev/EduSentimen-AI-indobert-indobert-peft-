@@ -4,60 +4,86 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - EduSentiment AI</title>
-    <link rel="stylesheet" href="../assets/css/style_login_admin.css">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* Tambahan minimal */
         .error-message {
-            color: #e74c3c;
-            font-size: 14px;
-            margin-top: 8px;
             display: none;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="login-box">
-            <img src="../assets/images/logoppl.jpg" alt="Logo" class="logo">
-            <h2>Masuk Sebagai Admin</h2>
+<body class="bg-gradient-to-br from-blue-400 to-cyan-400 font-sans h-screen overflow-hidden flex items-center justify-center">
+
+    <div class="w-full max-w-sm px-4">
+        <div class="bg-white p-8 rounded-xl shadow-2xl">
+
+            <!-- Logo -->
+            <img src="../assets/images/logoppl.jpg" alt="Logo" class="w-48 mx-auto mb-1 block">
+
+            <!-- Judul -->
+            <h2 class="text-center text-xl font-semibold text-gray-800 mt-4 mb-5">Masuk Sebagai Admin</h2>
+
+            <!-- Form -->
             <form id="loginForm">
-                <div class="input-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" placeholder="Masukkan username" required>
+                <!-- Username -->
+                <div class="mb-4">
+                    <label for="username" class="block mb-1.5 text-sm font-bold text-gray-600">Username</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        placeholder="Masukkan username" 
+                        required
+                        class="w-full px-3 py-2.5 border border-gray-300 rounded-lg outline-none transition-colors focus:border-blue-400 focus:ring-2 focus:ring-blue-200 text-sm"
+                    >
                 </div>
 
-                <div class="input-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" placeholder="Masukkan password" required>
+                <!-- Password -->
+                <div class="mb-4">
+                    <label for="password" class="block mb-1.5 text-sm font-bold text-gray-600">Password</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        placeholder="Masukkan password" 
+                        required
+                        class="w-full px-3 py-2.5 border border-gray-300 rounded-lg outline-none transition-colors focus:border-blue-400 focus:ring-2 focus:ring-blue-200 text-sm"
+                    >
                 </div>
 
-                <div class="error-message" id="errorMsg">Username atau password salah</div>
+                <!-- Error Message -->
+                <div id="errorMsg" class="error-message text-red-500 text-sm mt-1 mb-2">
+                    Username atau password salah
+                </div>
 
-                <button type="submit" class="btn-login">Login</button>
+                <!-- Tombol Login -->
+                <button 
+                    type="submit" 
+                    class="w-full py-2.5 bg-blue-400 hover:bg-cyan-400 text-white font-semibold rounded-lg transition-colors text-base mt-2"
+                >
+                    Login
+                </button>
             </form>
+
         </div>
     </div>
 
     <script>
         document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault(); // cegah reload halaman
+            e.preventDefault();
 
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const errorMsg = document.getElementById('errorMsg');
 
-            // Cek kredensial
             if (username === 'sangbintang' && password === '1234') {
-                // Berhasil login
                 errorMsg.style.display = 'none';
-                // Arahkan ke dashboard admin (pastikan path benar)
                 window.location.href = 'dashboard_admin.html';
             } else {
-                // Tampilkan pesan error
                 errorMsg.style.display = 'block';
-                // Opsional: kosongkan password
                 document.getElementById('password').value = '';
             }
         });
     </script>
+
 </body>
 </html>
