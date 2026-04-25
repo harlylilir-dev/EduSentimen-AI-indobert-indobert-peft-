@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from datetime import datetime
 from services.supabase_client import get_supabase
-from services.text_cleaning import clean_text
+from utils.text_cleaning import clean_text
 import torch
 
 router = APIRouter(prefix="/predict", tags=["Prediksi"])

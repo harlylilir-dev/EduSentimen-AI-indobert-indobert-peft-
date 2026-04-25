@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import login_admin, predict, upload_csv, dashboard_admin, dataset_admin
-from services.text_cleaning import clean_text  # tidak langsung dipakai, tapi pastikan clean_text ada
+from utils.text_cleaning import clean_text
 
 # Inisialisasi model hanya sekali
 MODEL_READY = False
@@ -20,7 +20,6 @@ try:
         tokenizer = AutoTokenizer.from_pretrained(base_model)
         id2label = {0: "marah", 1: "sedih", 2: "senang", 3: "takut", 4: "cinta", 5: "netral"}
 
-        # Set dependensi model ke router predict
         predict.set_model_dependencies(model, tokenizer, id2label)
         MODEL_READY = True
         print("✅ Model IndoBERT + PEFT berhasil dimuat.")
@@ -29,10 +28,10 @@ except Exception as e:
 
 app = FastAPI(title="EduSentiment AI Backend")
 
-# CORS (agar frontend bisa akses)
+# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Ganti dengan domain frontend nanti
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -43,7 +42,7 @@ app.include_router(login_admin.router)
 app.include_router(predict.router)
 app.include_router(upload_csv.router)
 app.include_router(dashboard_admin.router)
-app.include_router(dataset_admin.router)
+app.include_router(dataset_admin.router)   # <-- Ini yang baru
 
 @app.get("/")
 def root():

@@ -3,11 +3,15 @@ import bcrypt
 import jwt
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 load_dotenv()
 JWT_SECRET = os.getenv("JWT_SECRET")
 JWT_ALGORITHM = "HS256"
 JWT_EXP_DELTA_HOURS = 12
+
+security = HTTPBearer()
 
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
@@ -24,3 +28,13 @@ def create_jwt(username: str) -> str:
 
 def decode_jwt(token: str):
     return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+
+def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    try:
+        payload = decode_jwt(token)
+        return payload  # misal: {"sub": "sangbintang", ...}
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
