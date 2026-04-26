@@ -2,565 +2,731 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pengaturan Model - EduSentiment</title>
-    <link rel="stylesheet" href="../assets/css/style_pengaturan_admin.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .submenu { transition: all 0.3s ease; }
+        .tooltip-popup {
+            position: fixed;
+            z-index: 100;
+            max-width: 280px;
+            background: #1f2937;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        /* Toggle switch */
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #4F46E5;
+        }
+        .toggle-label {
+            transition: background-color 0.2s;
+            cursor: pointer;
+            width: 40px;
+            height: 20px;
+            background-color: #d1d5db;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            padding: 2px;
+        }
+        .toggle-label span {
+            width: 16px;
+            height: 16px;
+            background-color: white;
+            border-radius: 50%;
+            display: block;
+            transition: transform 0.2s;
+        }
+        .toggle-checkbox:checked + .toggle-label span {
+            transform: translateX(20px);
+        }
+    </style>
 </head>
-<body>
+<body class="bg-gray-100 font-sans">
 
 <!-- NAVBAR -->
-<div class="navbar">
-    <div class="nav-left">
-        <h2>Admin Panel</h2>
+<nav class="fixed top-0 left-0 w-full h-14 bg-gray-800 text-white flex items-center justify-between px-5 z-50">
+    <div class="text-xl font-bold">Admin Panel</div>
+    <div>
+        <a href="login_admin.html" class="bg-white text-gray-800 font-bold py-2 px-4 rounded-md hover:bg-gray-200 transition-colors">Logout</a>
     </div>
-    <div class="nav-right">
-        <a href="login_admin.html" class="btn-logout">Logout</a>
-    </div>
-</div>
+</nav>
 
 <!-- SIDEBAR -->
-<div class="sidebar">
-    <a href="dashboard_admin.html">Dashboard</a>
-    <a href="dataset_admin.html">Dataset</a>
-    <a href="preprocessing_admin.html">Pre-Processing</a>
+<aside class="fixed left-0 top-14 h-[calc(100vh-3.5rem)] w-56 bg-gray-700 text-white overflow-y-auto pt-2">
+    <a href="dashboard_admin.html" class="block py-3 px-5 hover:bg-teal-500 transition-colors">Dashboard</a>
+    <a href="dataset_admin.html" class="block py-3 px-5 hover:bg-teal-500 transition-colors">Dataset</a>
+    <a href="preprocessing_admin.html" class="block py-3 px-5 hover:bg-teal-500 transition-colors">Pre-Processing</a>
 
-    <div class="menu-item active" onclick="toggleMenu('processMenu', this)">
-        Processing ▾
+    <div class="py-3 px-5 hover:bg-teal-500 transition-colors cursor-pointer flex items-center justify-between" onclick="toggleMenu('processMenu')">
+        <span>Processing</span>
+        <svg class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
     </div>
-    <div class="submenu show" id="processMenu">
-        <a href="pengaturan_admin.html" class="active-sub">Pengaturan</a>
-        <a href="pelatihanmodel_admin.html">Pelatihan Model</a>
+    <div class="submenu bg-gray-600" id="processMenu">
+        <a href="pengaturan_admin.html" class="block py-2 pl-10 pr-5 hover:bg-teal-500 transition-colors text-sm bg-teal-500">Pengaturan</a>
+        <a href="pelatihanmodel_admin.html" class="block py-2 pl-10 pr-5 hover:bg-teal-500 transition-colors text-sm">Pelatihan Model</a>
     </div>
 
-    <a href="testing_admin.html">Testing</a>
-    <a href="evaluasi_admin.html">Evaluasi</a>
-</div>
+    <a href="testing_admin.html" class="block py-3 px-5 hover:bg-teal-500 transition-colors">Testing</a>
+    <a href="evaluasi_admin.html" class="block py-3 px-5 hover:bg-teal-500 transition-colors">Evaluasi</a>
+</aside>
 
 <!-- CONTENT -->
-<div class="content">
+<main class="ml-56 mt-14 p-6 min-h-screen">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Pengaturan Model</h1>
 
-<h1>Pengaturan Model</h1>
-
-<!-- ================= DAFTAR MODEL ================= -->
-<div class="card">
-    <h3>Daftar Model Tersimpan</h3>
-
-    <table>
-        <thead>
-            <tr>
-                <th>No</th>
-                <th>Nama Model</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody id="modelList">
-            <tr>
-                <td colspan="3">Belum ada model</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-
-<!-- ================= KONFIGURASI ================= -->
-<div class="card">
-    <h3>Konfigurasi Model</h3>
-
-    <label>Nama Model</label>
-    <input type="text" id="nama_model" placeholder="Contoh: IndoBERT Baseline">
-
-    <label>Pilih Model</label>
-    <select id="model" onchange="toggleModel()">
-        <option value="indobert">IndoBERT</option>
-        <option value="indobert_peft">IndoBERT + PEFT</option>
-    </select>
-
-    <h4>Pembagian Data</h4>
-
-    <div class="radio-row">
-
-        <div class="radio-item">
-            <input type="radio" name="split_type" value="split" checked onchange="toggleSplitType()">
-            <span>Percentage Split</span>
+    <!-- DAFTAR MODEL TERSIMPAN -->
+    <div class="bg-white p-5 rounded-lg shadow-md mb-6">
+        <h3 class="text-lg font-semibold text-gray-700 mb-3">Daftar Model Tersimpan</h3>
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse">
+                <thead>
+                    <tr>
+                        <th class="bg-gray-800 text-white p-2 text-sm">No</th>
+                        <th class="bg-gray-800 text-white p-2 text-sm">Nama Model</th>
+                        <th class="bg-gray-800 text-white p-2 text-sm">Tipe</th>
+                        <th class="bg-gray-800 text-white p-2 text-sm">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="modelList"></tbody>
+            </table>
         </div>
-
-        <div class="radio-item">
-            <input type="radio" name="split_type" value="kfold" onchange="toggleSplitType()">
-            <span>Cross Validation</span>
-        </div>
-
+        <div id="pagination" class="flex justify-center items-center gap-3 mt-4"></div>
     </div>
 
-    <!-- ================= SPLIT ================= -->
-    <div id="splitSection">
+    <!-- FORM KONFIGURASI MODEL BARU -->
+    <div class="bg-white p-5 rounded-lg shadow-md">
+        <h3 class="text-lg font-semibold text-gray-700 mb-3">Konfigurasi Model Baru</h3>
 
-        <label>Rasio Train / Test</label>
-
-        <div style="display:flex; align-items:center; gap:10px; margin-top:5px;">
-            <input type="number" id="split_train" value="80" style="width:80px;"> %
-            :
-            <input type="number" id="split_test" value="20" style="width:80px;"> %
+        <!-- Nama Model -->
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Nama Model <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Nama unik untuk mengidentifikasi model ini.')">ⓘ</span></label>
+            <input type="text" id="nama_model" placeholder="Contoh: IndoBERT Baseline"
+                   class="border border-gray-300 rounded-md px-3 py-2 text-sm w-full md:w-1/2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-400">
         </div>
 
+        <!-- Pilih Algoritma -->
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Pilih Model Base <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'IndoBERT: base model standar. IndoBERT+PEFT: tambahan metode efisien seperti LoRA, Adapter, dll.')">ⓘ</span></label>
+            <select id="model" onchange="toggleModel()"
+                    class="border border-gray-300 rounded-md px-3 py-2 text-sm w-full md:w-1/2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <option value="indobert">IndoBERT</option>
+                <option value="indobert_peft">IndoBERT + PEFT</option>
+            </select>
+        </div>
+
+        <!-- PARAMETER DASAR -->
+        <div class="mb-6">
+            <div class="flex items-center justify-between mb-3">
+                <h4 class="text-md font-semibold text-gray-700">Parameter Dasar</h4>
+                <!-- Toggle untuk seluruh grup dasar (default aktif) -->
+                <label class="flex items-center cursor-pointer">
+                    <span class="text-xs mr-2 text-gray-600">Aktifkan</span>
+                    <input type="checkbox" id="toggle_basic" checked class="toggle-checkbox hidden" onchange="toggleGroup('basic', this.checked)">
+                    <span class="toggle-label"><span></span></span>
+                </label>
+            </div>
+            <div id="group_basic" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Jumlah Kelas Emosi -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Jumlah Kelas Emosi <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Jumlah label emosi yang akan diprediksi, misal 5: senang, sedih, marah, takut, netral.')">ⓘ</span></label>
+                    <input type="number" id="num_classes" value="5" min="2" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                </div>
+                <!-- Max Sequence Length -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Max Sequence Length <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Panjang maksimum token input. Teks lebih panjang dipotong, lebih pendek di-padding.')">ⓘ</span></label>
+                    <select id="max_length" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                        <option value="64">64</option>
+                        <option value="128" selected>128</option>
+                        <option value="256">256</option>
+                    </select>
+                </div>
+                <!-- Batch Size -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Batch Size <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Jumlah sampel per langkah training. Terlalu besar bisa kehabisan memori.')">ⓘ</span></label>
+                    <select id="batch_size" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                        <option>8</option>
+                        <option selected>16</option>
+                        <option>32</option>
+                    </select>
+                </div>
+                <!-- Rasio Train -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Rasio Train (%) <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Persentase data untuk training, sisanya untuk validasi.')">ⓘ</span></label>
+                    <input type="number" id="train_ratio" value="80" min="10" max="90" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                </div>
+                <!-- Learning Rate -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Learning Rate <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Laju pembelajaran. 2e-5 umum untuk fine-tuning transformer.')">ⓘ</span></label>
+                    <select id="lr" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                        <option value="2e-5" selected>2e-5</option>
+                        <option value="3e-5">3e-5</option>
+                        <option value="5e-5">5e-5</option>
+                    </select>
+                </div>
+                <!-- Optimizer -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Optimizer <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'AdamW memisahkan weight decay dari learning rate.')">ⓘ</span></label>
+                    <select id="optimizer" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                        <option value="adamw" selected>AdamW</option>
+                        <option value="adam">Adam</option>
+                    </select>
+                </div>
+                <!-- Weight Decay -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Weight Decay <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Regularisasi L2. 0.01 adalah nilai umum.')">ⓘ</span></label>
+                    <input type="number" step="0.001" id="weight_decay" value="0.01" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                </div>
+                <!-- Epoch -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Epoch <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Berapa kali seluruh data latih dilewati.')">ⓘ</span></label>
+                    <input type="number" id="epoch" value="5" min="1" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                </div>
+                <!-- LR Scheduler -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">LR Scheduler <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Penjadwalan learning rate. Linear menurun linear, cosine mengikuti kurva kosinus.')">ⓘ</span></label>
+                    <select id="lr_scheduler" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                        <option value="linear">Linear</option>
+                        <option value="cosine">Cosine</option>
+                    </select>
+                </div>
+                <!-- Dropout Classifier Head -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Dropout Classifier Head <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Dropout sebelum layer klasifikasi untuk mencegah overfitting.')">ⓘ</span></label>
+                    <input type="number" step="0.01" id="dropout_cls" value="0.1" min="0" max="0.9" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                </div>
+                <!-- Class Weights -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Class Weights <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Berikan bobot lebih pada kelas minoritas. Balanced menghitung otomatis dari data.')">ⓘ</span></label>
+                    <select id="class_weights" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                        <option value="none">Tidak Digunakan</option>
+                        <option value="balanced">Balanced</option>
+                    </select>
+                </div>
+                <!-- Random Seed -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Random Seed <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Reproduktifitas. Gunakan nilai yang sama untuk menghasilkan hasil yang sama.')">ⓘ</span></label>
+                    <input type="number" id="random_seed" value="42" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                </div>
+            </div>
+        </div>
+
+        <!-- PEFT SECTION (hanya muncul jika IndoBERT + PEFT dipilih) -->
+        <div id="peftSection" class="hidden mt-6 space-y-6">
+            <!-- =========== LoRA =========== -->
+            <div class="border-t pt-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="text-md font-semibold text-gray-700">LoRA <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Low-Rank Adaptation: melatih matriks dekomposisi berdimensi rendah untuk efisiensi.')">ⓘ</span></h4>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggle_lora" class="toggle-checkbox hidden" onchange="toggleGroup('lora', this.checked)">
+                        <span class="toggle-label"><span></span></span>
+                    </label>
+                </div>
+                <div id="group_lora" class="grid grid-cols-1 md:grid-cols-3 gap-4 hidden">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Rank (r) <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Dimensi dekomposisi rank. Semakin besar semakin ekspresif.')">ⓘ</span></label>
+                        <input type="number" id="lora_r" value="8" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Alpha <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Faktor skala untuk matriks LoRA.')">ⓘ</span></label>
+                        <input type="number" id="lora_alpha" value="16" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Dropout <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Dropout pada layer LoRA.')">ⓘ</span></label>
+                        <input type="number" step="0.01" id="lora_dropout" value="0.1" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Target Modules <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Layer mana yang akan ditambahkan LoRA, misal q_proj,v_proj.')">ⓘ</span></label>
+                        <input type="text" id="lora_target" value="q_proj,v_proj" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Bias <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Apakah bias dilatih? none atau all.')">ⓘ</span></label>
+                        <select id="lora_bias" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                            <option value="none">None</option>
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Task Type <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Jenis task: Sequence Classification (klasifikasi teks) atau Token Classification (NER).')">ⓘ</span></label>
+                        <select id="lora_task" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                            <option value="SEQ_CLS">Sequence Classification</option>
+                            <option value="TOKEN_CLS">Token Classification</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =========== QLoRA =========== -->
+            <div class="border-t pt-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="text-md font-semibold text-gray-700">QLoRA <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Quantized LoRA: LoRA dengan kuantisasi 4-bit untuk mengurangi memori.')">ⓘ</span></h4>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggle_qlora" class="toggle-checkbox hidden" onchange="toggleGroup('qlora', this.checked)">
+                        <span class="toggle-label"><span></span></span>
+                    </label>
+                </div>
+                <div id="group_qlora" class="grid grid-cols-1 md:grid-cols-3 gap-4 hidden">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Rank <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Rank untuk QLoRA.')">ⓘ</span></label>
+                        <input type="number" id="qlora_r" value="4" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Alpha</label>
+                        <input type="number" id="qlora_alpha" value="16" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Dropout</label>
+                        <input type="number" step="0.01" id="qlora_dropout" value="0.1" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Quantization Type <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Jenis kuantisasi: nf4 (NormalFloat4) atau fp4.')">ⓘ</span></label>
+                        <input type="text" id="qlora_quant" value="nf4" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Compute Dtype</label>
+                        <input type="text" id="qlora_dtype" value="float16" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Double Quantization</label>
+                        <select id="qlora_double" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                            <option value="true">True</option>
+                            <option value="false">False</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Bits</label>
+                        <select id="qlora_bits" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                            <option value="4">4-bit</option>
+                            <option value="8">8-bit</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =========== Adapter =========== -->
+            <div class="border-t pt-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="text-md font-semibold text-gray-700">Adapter <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Layer adaptif kecil yang disisipkan di antara layer transformer.')">ⓘ</span></h4>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggle_adapter" class="toggle-checkbox hidden" onchange="toggleGroup('adapter', this.checked)">
+                        <span class="toggle-label"><span></span></span>
+                    </label>
+                </div>
+                <div id="group_adapter" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Reduction Factor</label>
+                        <input type="number" id="adapter_r" value="16" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Dropout</label>
+                        <input type="number" step="0.01" id="adapter_dropout" value="0.1" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Activation</label>
+                        <input type="text" id="adapter_act" value="gelu" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Non-linearity</label>
+                        <input type="text" id="adapter_nonlin" value="relu" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                    </div>
+                </div>
+            </div>
+
+            <!-- =========== Adapter Fusion =========== -->
+            <div class="border-t pt-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="text-md font-semibold text-gray-700">Adapter Fusion <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Menggabungkan beberapa adapter. Membutuhkan setidaknya 2 adapter.')">ⓘ</span></h4>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggle_fusion" class="toggle-checkbox hidden" onchange="toggleGroup('fusion', this.checked)">
+                        <span class="toggle-label"><span></span></span>
+                    </label>
+                </div>
+                <div id="group_fusion" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Jumlah Adapter <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Jumlah adapter yang akan digabungkan. Minimal 2.')">ⓘ</span></label>
+                        <input type="number" id="fusion_n" value="2" min="2" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Fusion Type</label>
+                        <select id="fusion_type" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                            <option value="attention">Attention</option>
+                            <option value="simple">Simple</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Temperature</label>
+                        <input type="number" step="0.1" id="fusion_temp" value="1.0" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Fusion Dropout</label>
+                        <input type="number" step="0.01" id="fusion_dropout" value="0.1" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                    </div>
+                </div>
+            </div>
+
+            <!-- =========== UMAP (opsional) =========== -->
+            <div class="border-t pt-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="text-md font-semibold text-gray-700">UMAP (Reduksi Dimensi) <span class="cursor-help text-gray-400" onclick="showTooltip(event, 'Uniform Manifold Approximation and Projection untuk visualisasi embedding.')">ⓘ</span></h4>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggle_umap" class="toggle-checkbox hidden" onchange="toggleGroup('umap', this.checked)">
+                        <span class="toggle-label"><span></span></span>
+                    </label>
+                </div>
+                <div id="group_umap" class="grid grid-cols-1 md:grid-cols-3 gap-4 hidden">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">n_neighbors</label>
+                        <input type="number" id="umap_neighbors" value="15" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">min_dist</label>
+                        <input type="number" step="0.01" id="umap_min_dist" value="0.1" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">metric</label>
+                        <select id="umap_metric" class="border border-gray-300 rounded-md px-2 py-1 text-sm w-full mt-1">
+                            <option value="cosine">cosine</option>
+                            <option value="euclidean">euclidean</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tombol Simpan -->
+        <button onclick="simpanModel()"
+                class="mt-6 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-md transition-colors">
+            Simpan Model
+        </button>
+        <p id="status" class="mt-3 text-sm"></p>
     </div>
+</main>
 
-    <!-- ================= KFOLD ================= -->
-    <div id="kfoldSection" style="display:none; margin-top:10px;">
-
-        <label>Jumlah Fold (K)</label>
-        <input type="number" id="k_fold" value="5">
-
-        <label>Epoch per Fold</label>
-        <input type="number" id="epoch_fold" value="5">
-
-    </div>
-
-    <!-- PARAMETER UMUM -->
-     <h4 class="section-title">Parameter Umum</h4>
-
-    <div class="form-grid">
-
-        <div class="form-group">
-            <label>Random State</label>
-            <input type="number" id="random_state" value="42">
-        </div>
-
-        <div class="form-group">
-            <label>Shuffle Before Split</label>
-            <select id="shuffle">
-                <option value="true" selected>Ya</option>
-                <option value="false">Tidak</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Stratified Folds</label>
-            <select id="stratified">
-                <option value="true" selected>Ya</option>
-                <option value="false">Tidak</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Early Stopping Patience</label>
-            <input type="number" id="early_stopping" value="0">
-        </div>
-
-        <div class="form-group">
-            <label>Parallel Folds</label>
-            <select id="parallel">
-                <option value="false" selected>Tidak</option>
-                <option value="true">Ya</option>
-            </select>
-        </div>
-
-    </div>
-
-    <!-- INDO BERT -->
-    <h4 class="section-title">IndoBERT</h4>
-
-    <div class="form-grid">
-
-        <div class="form-group">
-            <label>Model Name</label>
-            <input type="text" id="model_name" value="indobenchmark/indobert-base-p2">
-        </div>
-
-        <div class="form-group">
-            <label>Max Sequence Length</label>
-            <select id="max_length">
-                <option value="64">64</option>
-                <option value="128" selected>128</option>
-                <option value="256">256</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Pooling Strategy</label>
-            <select id="pooling">
-                <option value="cls">CLS</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Batch Size</label>
-            <select id="batch">
-                <option>8</option>
-                <option selected>16</option>
-                <option>32</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Learning Rate</label>
-            <select id="lr">
-                <option value="2e-5" selected>2e-5</option>
-                <option value="3e-5">3e-5</option>
-                <option value="5e-5">5e-5</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Optimizer</label>
-            <select id="optimizer">
-                <option value="adamw" selected>AdamW</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Warmup Ratio</label>
-            <input type="number" step="0.01" id="warmup" value="0.1">
-        </div>
-
-        <div class="form-group">
-            <label>Weight Decay</label>
-            <input type="number" step="0.01" id="weight_decay" value="0.01">
-        </div>
-
-    </div>
-
-        <!-- PEFT -->
-    <div id="peftSection">
-
-        <!-- ================= ADAPTER ================= -->
-        <h4>Adapter</h4>
-
-        <label>Reduction Factor</label>
-        <input type="number" id="adapter_r" value="16">
-
-        <label>Dropout</label>
-        <input type="number" step="0.01" id="adapter_dropout" value="0.1">
-
-        <label>Activation</label>
-        <input type="text" id="adapter_act" value="gelu">
-
-        <label>Non-linearity</label>
-        <input type="text" id="adapter_nonlin" value="relu">
-
-
-        <!-- ================= LORA ================= -->
-        <h4>LoRA</h4>
-
-        <label>Rank (r)</label>
-        <input type="number" id="lora_r" value="8">
-
-        <label>Alpha</label>
-        <input type="number" id="lora_alpha" value="16">
-
-        <label>Dropout</label>
-        <input type="number" step="0.01" id="lora_dropout" value="0.1">
-
-        <label>Target Modules</label>
-        <input type="text" id="lora_target" value="q_proj,v_proj">
-
-        <label>Bias</label>
-        <select id="lora_bias">
-            <option value="none">None</option>
-            <option value="all">All</option>
-        </select>
-
-        <label>Task Type</label>
-        <select id="lora_task">
-            <option value="SEQ_CLS">Sequence Classification</option>
-            <option value="TOKEN_CLS">Token Classification</option>
-        </select>
-
-
-        <!-- ================= QLORA ================= -->
-        <h4>QLoRA</h4>
-
-        <label>Rank</label>
-        <input type="number" id="qlora_r" value="4">
-
-        <label>Alpha</label>
-        <input type="number" id="qlora_alpha" value="16">
-
-        <label>Dropout</label>
-        <input type="number" step="0.01" id="qlora_dropout" value="0.1">
-
-        <label>Quantization Type</label>
-        <input type="text" id="qlora_quant" value="nf4">
-
-        <label>Compute Dtype</label>
-        <input type="text" id="qlora_dtype" value="float16">
-
-        <label>Double Quantization</label>
-        <select id="qlora_double">
-            <option value="true">True</option>
-            <option value="false">False</option>
-        </select>
-
-        <label>Bits</label>
-        <select id="qlora_bits">
-            <option value="4">4-bit</option>
-            <option value="8">8-bit</option>
-        </select>
-
-
-        <!-- ================= ADAPTER FUSION ================= -->
-        <h4>Adapter Fusion</h4>
-
-        <label>Jumlah Adapter</label>
-        <input type="number" id="fusion_n" value="2">
-
-        <label>Fusion Type</label>
-        <select id="fusion_type">
-            <option value="attention">Attention</option>
-            <option value="simple">Simple</option>
-        </select>
-
-        <label>Temperature</label>
-        <input type="number" step="0.1" id="fusion_temp" value="1.0">
-
-        <label>Fusion Dropout</label>
-        <input type="number" step="0.01" id="fusion_dropout" value="0.1">
-
-
-        <!-- ================= TRAINING STRATEGY ================= -->
-        <h4>Training Strategy</h4>
-
-        <label>Optimizer</label>
-        <select id="optimizer">
-            <option value="adamw">AdamW</option>
-            <option value="adam">Adam</option>
-        </select>
-
-        <label>Scheduler</label>
-        <select id="scheduler">
-            <option value="linear">Linear</option>
-            <option value="cosine">Cosine</option>
-        </select>
-
-        <label>Early Stopping (Epoch)</label>
-        <input type="number" id="early_stop" value="2">
-
-    </div>
-
-    <br><br>
-    <button onclick="simpanModel()">Simpan Model</button>
-    <p id="status"></p>
-</div>
-
-</div>
-
-<!-- SCRIPT -->
 <script>
+    const supabaseUrl = "https://ylaxeriooiwytmjrklff.supabase.co";
+    const supabaseKey = "sb_publishable_RBYPP8Wxw_lz2xNY77mcvw_jSuIzaHb";
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-// ================= CONFIG SUPABASE =================
-const supabaseUrl = "https://ylaxeriooiwytmjrklff.supabase.co";
-const supabaseKey = "sb_publishable_RBYPP8Wxw_lz2xNY77mcvw_jSuIzaHb";
-const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+    const ITEMS_PER_PAGE = 5;
+    let currentPage = 1;
+    let allModels = [];
 
-// ================= SIDEBAR =================
-function toggleMenu(menuId, el) {
-    const allMenus = document.querySelectorAll('.submenu');
-    const allItems = document.querySelectorAll('.menu-item');
-
-    allMenus.forEach(menu => {
-        if (menu.id !== menuId) menu.classList.remove("show");
-    });
-
-    allItems.forEach(item => item.classList.remove("active"));
-
-    document.getElementById(menuId).classList.toggle("show");
-    el.classList.add("active");
-}
-
-function toggleSplitType() {
-    let selected = document.querySelector('input[name="split_type"]:checked').value;
-
-    document.getElementById("splitSection").style.display =
-        selected === "split" ? "block" : "none";
-
-    document.getElementById("kfoldSection").style.display =
-        selected === "kfold" ? "block" : "none";
-}
-
-// ================= TOGGLE MODEL =================
-function toggleModel() {
-    let selected = document.getElementById("model").value;
-
-    document.getElementById("peftSection").style.display =
-        selected === "indobert" ? "none" : "block";
-}
-
-// ================= LOAD DATA DARI SUPABASE =================
-async function loadModelList() {
-
-    const { data, error } = await supabaseClient
-        .from("models")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-    const table = document.getElementById("modelList");
-    table.innerHTML = "";
-
-    if (error || !data.length) {
-        table.innerHTML = `<tr><td colspan="3">Belum ada model</td></tr>`;
-        return;
+    // ---------- NAVIGASI ----------
+    function toggleMenu(id) {
+        document.getElementById(id).classList.toggle('hidden');
     }
 
-    data.forEach((m, i) => {
-        table.innerHTML += `
-        <tr>
-            <td>${i+1}</td>
-            <td>${m.nama}</td>
-            <td>
-                <button onclick="lihatModel('${m.id}')">Lihat</button>
-                <button onclick="hapusModel('${m.id}')">Hapus</button>
-            </td>
-        </tr>`;
-    });
+    // ---------- TOOLTIP ----------
+    function showTooltip(event, text) {
+    // Hentikan propagasi agar event tidak langsung memicu listener document
+    event.stopPropagation();
+
+    // Hapus tooltip sebelumnya
+    const existing = document.querySelector('.tooltip-popup');
+    if (existing) existing.remove();
+
+    const tooltip = document.createElement('div');
+    tooltip.className = 'tooltip-popup';
+    tooltip.textContent = text;
+    document.body.appendChild(tooltip);
+
+    const x = event.clientX + 10;
+    const y = event.clientY + 10;
+    tooltip.style.left = x + 'px';
+    tooltip.style.top = y + 'px';
+
+    // Hilangkan setelah 3 detik atau klik di luar
+    const removeTooltip = (e) => {
+        if (!tooltip.contains(e.target)) {
+            tooltip.remove();
+            document.removeEventListener('click', removeTooltip);
+        }
+    };
+
+    // Gunakan setTimeout agar tidak langsung terpicu oleh event yang sama
+    setTimeout(() => {
+        document.addEventListener('click', removeTooltip, { once: false }); // once: false agar tetap bisa dihapus manual nanti
+    }, 0);
 }
 
-    // ================= SIMPAN KE SUPABASE =================
+    // ---------- TOGGLE GROUP ----------
+    window.toggleGroup = function(groupName, isActive) {
+        const group = document.getElementById('group_' + groupName);
+        if (group) {
+            group.classList.toggle('hidden', !isActive);
+        }
+    };
+
+    function getToggleState(groupName) {
+        const checkbox = document.getElementById('toggle_' + groupName);
+        return checkbox ? checkbox.checked : false;
+    }
+
+    // ---------- TOGGLE PEFT SECTION ----------
+    function toggleModel() {
+        const modelType = document.getElementById('model').value;
+        const peftSection = document.getElementById('peftSection');
+        if (modelType === 'indobert_peft') {
+            peftSection.classList.remove('hidden');
+        } else {
+            peftSection.classList.add('hidden');
+            // Matikan semua toggle PEFT
+            ['lora','qlora','adapter','fusion','umap'].forEach(g => {
+                const cb = document.getElementById('toggle_' + g);
+                if (cb) cb.checked = false;
+                toggleGroup(g, false);
+            });
+        }
+    }
+
+    // ---------- PAGINASI DAFTAR MODEL ----------
+    async function loadModelList() {
+        const { data, error } = await supabaseClient
+            .from("models")
+            .select("*")
+            .order("created_at", { ascending: false });
+        if (error) {
+            console.error(error);
+            allModels = [];
+        } else {
+            allModels = data || [];
+        }
+        currentPage = 1;
+        renderModelTable();
+    }
+
+    function renderModelTable() {
+        const totalPages = Math.ceil(allModels.length / ITEMS_PER_PAGE) || 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * ITEMS_PER_PAGE;
+        const pageData = allModels.slice(start, start + ITEMS_PER_PAGE);
+
+        const tbody = document.getElementById('modelList');
+        tbody.innerHTML = '';
+        if (pageData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="p-2 text-center text-gray-500">Belum ada model</td></tr>';
+        } else {
+            pageData.forEach((m, i) => {
+                const row = document.createElement('tr');
+                row.className = 'even:bg-gray-50';
+                row.innerHTML = `
+                    <td class="p-2 text-center">${start + i + 1}</td>
+                    <td class="p-2 text-center">${m.nama}</td>
+                    <td class="p-2 text-center">${m.model}</td>
+                    <td class="p-2 text-center">
+                        <button onclick="hapusModel('${m.id}')" class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-1 px-3 rounded-md">Hapus</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Render pagination
+        const pagDiv = document.getElementById('pagination');
+        pagDiv.innerHTML = '';
+        if (totalPages > 1) {
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = '← Sebelumnya';
+            prevBtn.className = 'px-3 py-1 border border-gray-300 rounded-md bg-white hover:bg-gray-100 disabled:opacity-50';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; renderModelTable(); } };
+
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = 'Berikutnya →';
+            nextBtn.className = 'px-3 py-1 border border-gray-300 rounded-md bg-white hover:bg-gray-100 disabled:opacity-50';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => { if (currentPage < totalPages) { currentPage++; renderModelTable(); } };
+
+            const info = document.createElement('span');
+            info.textContent = `Halaman ${currentPage} dari ${totalPages}`;
+            info.className = 'text-sm text-gray-600';
+
+            pagDiv.appendChild(prevBtn);
+            pagDiv.appendChild(info);
+            pagDiv.appendChild(nextBtn);
+        }
+    }
+
+    async function hapusModel(id) {
+        if (!confirm('Hapus model ini?')) return;
+        const { error } = await supabaseClient.from('models').delete().eq('id', id);
+        if (error) {
+            alert('Gagal menghapus: ' + error.message);
+        } else {
+            loadModelList();
+        }
+    }
+
+    // ---------- VALIDASI BENTROK ----------
+    function validateConfig() {
+        const warnings = [];
+        const modelType = document.getElementById('model').value;
+
+        if (modelType === 'indobert_peft') {
+            const loraActive = getToggleState('lora');
+            const qloraActive = getToggleState('qlora');
+            const adapterActive = getToggleState('adapter');
+            const fusionActive = getToggleState('fusion');
+            const umapActive = getToggleState('umap');
+
+            // 1. LoRA dan QLoRA tidak bisa bersamaan
+            if (loraActive && qloraActive) {
+                warnings.push('⚠️ LoRA dan QLoRA tidak dapat diaktifkan bersamaan. Pilih salah satu.');
+            }
+            // 2. Adapter Fusion butuh setidaknya 2 adapter, dan adapter harus aktif
+            if (fusionActive) {
+                if (!adapterActive) {
+                    warnings.push('⚠️ Adapter Fusion memerlukan Adapter dasar diaktifkan.');
+                } else {
+                    const fusionN = parseInt(document.getElementById('fusion_n').value) || 2;
+                    if (fusionN < 2) {
+                        warnings.push('⚠️ Jumlah Adapter untuk Fusion minimal 2.');
+                    }
+                }
+            }
+            // 3. UMAP tidak masalah sendiri, tapi hanya untuk visualisasi
+        }
+
+        // 4. Parameter dasar wajib diisi
+        const numClasses = parseInt(document.getElementById('num_classes').value);
+        if (isNaN(numClasses) || numClasses < 2) {
+            warnings.push('⚠️ Jumlah Kelas Emosi harus minimal 2.');
+        }
+
+        const trainRatio = parseInt(document.getElementById('train_ratio').value);
+        if (isNaN(trainRatio) || trainRatio < 10 || trainRatio > 90) {
+            warnings.push('⚠️ Rasio Train harus antara 10% dan 90%.');
+        }
+
+        return warnings;
+    }
+
+    // ---------- SIMPAN MODEL ----------
     async function simpanModel() {
+        const statusEl = document.getElementById('status');
+        statusEl.innerHTML = '';
 
-        const status = document.getElementById("status");
-
-        let selected = document.getElementById("model").value;
-
-        // 🔥 ambil radio dengan aman
-        let selectedRadio = document.querySelector('input[name="split_type"]:checked');
-
-        if (!selectedRadio) {
-            alert("Pilih metode pembagian data dulu");
+        const nama = document.getElementById('nama_model').value.trim();
+        if (!nama) {
+            statusEl.innerHTML = '❌ Nama model wajib diisi.';
+            statusEl.className = 'mt-3 text-sm text-red-600';
             return;
         }
 
-        let selectedSplit = selectedRadio.value;
-
-        // 🔥 deklarasi dulu
-        let validation = {};
-
-        if (selectedSplit === "split") {
-
-            let train = parseInt(document.getElementById("split_train").value);
-            let test = parseInt(document.getElementById("split_test").value);
-
-            // VALIDASI
-            if (train + test !== 100) {
-                alert("Train + Test harus = 100%");
-                return;
-            }
-
-            validation = {
-                method: "split",
-                split_ratio: train / 100
-            };
-
-        } else {
-
-            validation = {
-                method: "kfold",
-                k_fold: parseInt(document.getElementById("k_fold").value),
-                epoch_fold: parseInt(document.getElementById("epoch_fold").value)
-            };
-
+        // Validasi bentrok
+        const conflicts = validateConfig();
+        if (conflicts.length > 0) {
+            statusEl.innerHTML = conflicts.join('<br>');
+            statusEl.className = 'mt-3 text-sm text-yellow-600 bg-yellow-50 p-2 rounded';
+            return; // tetap bisa dilanjutkan? Anda bisa pilih: return untuk blokir, atau lanjut dengan peringatan.
+            // Di sini kita blokir total agar pengguna perbaiki dulu.
         }
 
-        // 🔥 ambil input dengan benar
-        let config = {
-            batch: parseInt(document.getElementById("batch").value),
-            lr: document.getElementById("lr").value,
-            validation: validation
+        const modelType = document.getElementById('model').value;
+
+        // Kumpulkan config dasar
+        const basicConfig = {
+            num_classes: parseInt(document.getElementById('num_classes').value),
+            max_length: parseInt(document.getElementById('max_length').value),
+            batch_size: parseInt(document.getElementById('batch_size').value),
+            train_ratio: parseInt(document.getElementById('train_ratio').value) / 100,
+            lr: document.getElementById('lr').value,
+            optimizer: document.getElementById('optimizer').value,
+            weight_decay: parseFloat(document.getElementById('weight_decay').value),
+            epoch: parseInt(document.getElementById('epoch').value),
+            lr_scheduler: document.getElementById('lr_scheduler').value,
+            dropout_cls: parseFloat(document.getElementById('dropout_cls').value),
+            class_weights: document.getElementById('class_weights').value,
+            random_seed: parseInt(document.getElementById('random_seed').value)
         };
 
-        console.log("CONFIG:", config);
+        const config = { ...basicConfig };
 
+        // Jika PEFT, tambahkan sub-konfig sesuai toggle
+        if (modelType === 'indobert_peft') {
+            config.peft = {};
 
-    // ================= PEFT =================
-    if (selected === "indobert_peft") {
-
-        config.peft = {
-            adapter: {
-                reduction_factor: +adapter_r.value,
-                dropout: +adapter_dropout.value,
-                activation: adapter_act.value,
-                non_linearity: adapter_nonlin.value
-            },
-
-            lora: {
-                r: +lora_r.value,
-                alpha: +lora_alpha.value,
-                dropout: +lora_dropout.value,
-                target_modules: lora_target.value,
-                bias: lora_bias.value,
-                task_type: lora_task.value
-            },
-
-            qlora: {
-                r: +qlora_r.value,
-                alpha: +qlora_alpha.value,
-                dropout: +qlora_dropout.value,
-                quant_type: qlora_quant.value,
-                compute_dtype: qlora_dtype.value,
-                double_quant: qlora_double.value === "true",
-                bits: +qlora_bits.value
-            },
-
-            adapter_fusion: {
-                num_adapter: +fusion_n.value,
-                fusion_type: fusion_type.value,
-                temperature: +fusion_temp.value,
-                dropout: +fusion_dropout.value
-            },
-
-            training: {
-                optimizer: optimizer.value,
-                scheduler: scheduler.value,
-                early_stopping: +early_stop.value
+            if (getToggleState('lora')) {
+                config.peft.lora = {
+                    r: parseInt(document.getElementById('lora_r').value),
+                    alpha: parseInt(document.getElementById('lora_alpha').value),
+                    dropout: parseFloat(document.getElementById('lora_dropout').value),
+                    target_modules: document.getElementById('lora_target').value,
+                    bias: document.getElementById('lora_bias').value,
+                    task_type: document.getElementById('lora_task').value
+                };
             }
-        };
+            if (getToggleState('qlora')) {
+                config.peft.qlora = {
+                    r: parseInt(document.getElementById('qlora_r').value),
+                    alpha: parseInt(document.getElementById('qlora_alpha').value),
+                    dropout: parseFloat(document.getElementById('qlora_dropout').value),
+                    quant_type: document.getElementById('qlora_quant').value,
+                    compute_dtype: document.getElementById('qlora_dtype').value,
+                    double_quant: document.getElementById('qlora_double').value === 'true',
+                    bits: parseInt(document.getElementById('qlora_bits').value)
+                };
+            }
+            if (getToggleState('adapter')) {
+                config.peft.adapter = {
+                    reduction_factor: parseInt(document.getElementById('adapter_r').value),
+                    dropout: parseFloat(document.getElementById('adapter_dropout').value),
+                    activation: document.getElementById('adapter_act').value,
+                    non_linearity: document.getElementById('adapter_nonlin').value
+                };
+            }
+            if (getToggleState('fusion')) {
+                config.peft.adapter_fusion = {
+                    num_adapters: parseInt(document.getElementById('fusion_n').value),
+                    fusion_type: document.getElementById('fusion_type').value,
+                    temperature: parseFloat(document.getElementById('fusion_temp').value),
+                    dropout: parseFloat(document.getElementById('fusion_dropout').value)
+                };
+            }
+            if (getToggleState('umap')) {
+                config.peft.umap = {
+                    n_neighbors: parseInt(document.getElementById('umap_neighbors').value),
+                    min_dist: parseFloat(document.getElementById('umap_min_dist').value),
+                    metric: document.getElementById('umap_metric').value
+                };
+            }
+        }
+
+        // Simpan ke Supabase
+        const { error } = await supabaseClient
+            .from('models')
+            .insert([{ nama, model: modelType, config }]);
+
+        if (error) {
+            statusEl.innerHTML = '❌ Gagal menyimpan: ' + error.message;
+            statusEl.className = 'mt-3 text-sm text-red-600';
+        } else {
+            statusEl.innerHTML = '✅ Model berhasil disimpan!';
+            statusEl.className = 'mt-3 text-sm text-green-600';
+            document.getElementById('nama_model').value = '';
+            loadModelList();
+        }
     }
 
-    let namaInput = document.getElementById("nama_model").value.trim();
-
-    let nama = namaInput !== "" 
-    ? namaInput 
-    : "Model-" + Date.now();
-
-    if (!namaInput) {
-    alert("Nama model harus diisi!");
-    return;
-    }
-
-    const { error } = await supabaseClient
-        .from("models")
-        .insert([{
-            nama: nama,
-            model: selected,
-            config: config,
-            created_at: new Date()
-        }])
-
-    if (error) {
-        console.log(error);
-        status.innerHTML = "❌ Gagal simpan ke database";
-        return;
-    }
-
-    status.innerHTML = "✅ Model berhasil disimpan ke Supabase";
-    loadModelList();
-}
-
-// ================= HAPUS =================
-async function hapusModel(id) {
-    await supabaseClient.from("models").delete().eq("id", id);
-    loadModelList();
-}
-
-// ================= LIHAT =================
-function lihatModel(id) {
-    window.location.href = "detailpengaturanmodel_admin.html?id=" + id;
-}
-
-// ================= INIT =================
-window.onload = () => {
-    loadModelList();
-    toggleModel();
-};
-
+    // ---------- INISIALISASI ----------
+    window.onload = () => {
+        loadModelList();
+        toggleModel(); // pastikan PEFT section sesuai default
+        // Atur semua toggle ke posisi mati kecuali basic
+        document.getElementById('toggle_basic').checked = true;
+        toggleGroup('basic', true);
+        // Pastikan checkbox PEFT dalam keadaan unchecked
+        ['lora','qlora','adapter','fusion','umap'].forEach(g => {
+            const cb = document.getElementById('toggle_' + g);
+            if (cb) cb.checked = false;
+            toggleGroup(g, false);
+        });
+    };
 </script>
-
 </body>
 </html>

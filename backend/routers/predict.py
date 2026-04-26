@@ -5,7 +5,7 @@ from services.supabase_client import get_supabase
 from utils.text_cleaning import clean_text
 import torch
 
-router = APIRouter(prefix="/predict", tags=["Prediksi"])
+router = APIRouter(prefix="/api/predict", tags=["Prediksi"])
 
 class PredictRequest(BaseModel):
     text: str
@@ -17,12 +17,23 @@ class PredictResponse(BaseModel):
     confidence: float
     created_at: str
 
-# Nanti akan diisi referensi model dari main.py
+# Variabel global model, bisa diisi via set_model_dependencies atau langsung dari pengaturan_admin
 model = None
 tokenizer = None
 id2label = {}
 
+# Coba ambil dari pengaturan_admin (setelah aktivasi model)
+try:
+    from routers.pengaturan_admin import model as _m, tokenizer as _t, id2label as _l, MODEL_READY
+    if MODEL_READY:
+        model = _m
+        tokenizer = _t
+        id2label = _l
+except ImportError:
+    pass
+
 def set_model_dependencies(model_obj, tokenizer_obj, label_mapping):
+    """Fungsi lama untuk injeksi model (masih dipertahankan)."""
     global model, tokenizer, id2label
     model = model_obj
     tokenizer = tokenizer_obj
@@ -30,8 +41,8 @@ def set_model_dependencies(model_obj, tokenizer_obj, label_mapping):
 
 @router.post("", response_model=PredictResponse)
 def predict_single(req: PredictRequest):
-    if model is None:
-        raise HTTPException(status_code=500, detail="Model belum dimuat")
+    if model is None or tokenizer is None:
+        raise HTTPException(status_code=503, detail="Model belum siap. Silakan latih dan aktifkan model.")
 
     text = req.text.strip()
     if not text:
@@ -43,17 +54,17 @@ def predict_single(req: PredictRequest):
         outputs = model(**inputs)
         probs = torch.softmax(outputs.logits, dim=1)
         confidence, pred_idx = torch.max(probs, dim=1)
+
     emotion = id2label.get(pred_idx.item(), "netral")
     confidence_val = round(confidence.item(), 4)
 
-    # Simpan ke Supabase
+    supabase = get_supabase()
     data = {
         "text": text,
         "emotion": emotion,
         "confidence": confidence_val,
         "created_at": datetime.utcnow().isoformat()
     }
-    supabase = get_supabase()
     res = supabase.table("comments").insert(data).execute()
     saved = res.data[0]
 
