@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import login_admin, predict, upload_csv, dashboard_admin, dataset_admin
+from routers import raw_datasets, clean_datasets, preprocessing_admin, login_admin, predict, upload_csv, dashboard_admin
 from utils.text_cleaning import clean_text
 from routers import preprocessing_admin
 
@@ -46,7 +46,8 @@ app.include_router(login_admin.router)
 app.include_router(predict.router)
 app.include_router(upload_csv.router)
 app.include_router(dashboard_admin.router)
-app.include_router(dataset_admin.router)   # <-- Ini yang baru
+app.include_router(raw_datasets.router)
+app.include_router(clean_datasets.router)
 app.include_router(preprocessing_admin.router)
 
 @app.get("/")

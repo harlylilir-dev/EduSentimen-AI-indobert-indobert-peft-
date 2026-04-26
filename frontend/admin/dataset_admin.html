@@ -4,12 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dataset Admin - EduSentiment</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .submenu {
-            transition: all 0.3s ease;
-        }
+        .submenu { transition: all 0.3s ease; }
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
@@ -43,52 +40,41 @@
 
 <!-- CONTENT -->
 <main class="ml-56 mt-14 p-6 min-h-screen">
-    <h1 class="text-2xl font-bold text-gray-800 mb-6">Manajemen Dataset</h1>
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Manajemen Dataset Mentah</h1>
 
     <!-- UPLOAD -->
     <div class="bg-white p-5 rounded-lg shadow-md mb-6">
         <h3 class="text-lg font-semibold text-gray-700 mb-3">Upload Dataset CSV / Excel</h3>
         <div class="flex items-center gap-3 flex-wrap">
             <input type="file" id="fileCSV" accept=".csv, .xlsx" class="border border-gray-300 rounded-md p-2 text-sm">
-            <button onclick="uploadCSV()" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition-colors">Upload</button>
+            <button onclick="uploadRaw()" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition-colors">Upload</button>
         </div>
         <p id="statusUpload" class="mt-3 text-sm"></p>
     </div>
 
-    <!-- DAFTAR DATASET -->
+    <!-- TABEL DATASET MENTAH -->
     <div class="bg-white p-5 rounded-lg shadow-md mb-6">
-        <h3 class="text-lg font-semibold text-gray-700 mb-3">Daftar Dataset</h3>
-
-        <!-- SEARCH -->
-        <input
-            type="text"
-            id="searchInput"
-            placeholder="Cari nama dataset..."
-            onkeyup="searchDataset()"
-            class="border border-gray-300 rounded-md px-3 py-2 text-sm w-full sm:w-1/3 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        >
-
+        <h3 class="text-lg font-semibold text-gray-700 mb-3">Daftar Dataset Mentah</h3>
+        <input type="text" id="searchRaw" placeholder="Cari nama dataset..." onkeyup="renderTable()"
+               class="border border-gray-300 rounded-md px-3 py-2 text-sm w-full sm:w-1/3 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400">
         <div class="overflow-x-auto">
             <table class="w-full border-collapse">
                 <thead>
                     <tr>
-                        <th class="bg-gray-800 text-white p-2 text-sm">ID Dataset</th>
+                        <th class="bg-gray-800 text-white p-2 text-sm">No</th>
                         <th class="bg-gray-800 text-white p-2 text-sm">Nama Dataset</th>
                         <th class="bg-gray-800 text-white p-2 text-sm">Jumlah Data</th>
                         <th class="bg-gray-800 text-white p-2 text-sm">Tanggal Upload</th>
                         <th class="bg-gray-800 text-white p-2 text-sm">Aksi</th>
                     </tr>
                 </thead>
-                <tbody id="listDataset">
-                    <!-- Diisi JavaScript -->
-                </tbody>
+                <tbody id="listRaw"></tbody>
             </table>
         </div>
-        <!-- Pagination daftar dataset -->
-        <div id="paginationList" class="flex justify-center items-center gap-3 mt-4"></div>
+        <div id="paginationRaw" class="flex justify-center items-center gap-3 mt-4"></div>
     </div>
 
-    <!-- DETAIL DATASET -->
+    <!-- DETAIL DATASET (MODAL) -->
     <div class="bg-white p-5 rounded-lg shadow-md mb-6 hidden" id="detailDataset">
         <h3 id="judulDataset" class="text-lg font-semibold text-gray-700 mb-3">Detail Dataset</h3>
         <div class="overflow-x-auto">
@@ -103,350 +89,214 @@
                 <tbody id="isiDataset"></tbody>
             </table>
         </div>
-        <!-- Pagination detail -->
         <div id="paginationDetail" class="flex justify-center items-center gap-3 mt-4"></div>
+        <button onclick="closeDetail()" class="mt-4 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-md transition-colors">Tutup</button>
     </div>
 </main>
 
-<!-- ==================== SCRIPT ==================== -->
 <script>
-// ==================== KONFIGURASI ====================
 const BASE_URL = "http://localhost:8000/api";
 const ITEMS_PER_PAGE = 10;
-let currentPageList = 1;
-let currentPageDetail = 1;
-let datasetDetailId = null;
 let token = localStorage.getItem("token");
+let rawData = [];
+let rawPage = 1;
+let detailPage = 1;
+let detailId = null;
 
-// ==================== FUNGSI PEMBANTU ====================
 async function fetchWithAuth(url, options = {}) {
     if (!token) {
         alert("Silakan login terlebih dahulu.");
         window.location.href = "login_admin.html";
         throw new Error("Tidak ada token");
     }
-
-    const headers = {
-        "Authorization": `Bearer ${token}`,
-    };
-    // Jangan set Content-Type manual untuk FormData
-    if (!(options.body instanceof FormData)) {
-        headers["Content-Type"] = "application/json";
-    }
-
+    const headers = { "Authorization": `Bearer ${token}` };
+    if (!(options.body instanceof FormData)) headers["Content-Type"] = "application/json";
     const response = await fetch(url, { ...options, headers });
-
     if (response.status === 401) {
         localStorage.removeItem("token");
-        alert("Sesi telah berakhir. Silakan login kembali.");
+        alert("Sesi telah berakhir.");
         window.location.href = "login_admin.html";
         throw new Error("Unauthorized");
     }
-
     if (!response.ok) {
-        let errMsg = `Gagal melakukan request (${response.status})`;
-        try {
-            const err = await response.json();
-            errMsg = err.detail || errMsg;
-        } catch (e) {}
+        let errMsg = `Gagal (${response.status})`;
+        try { const err = await response.json(); errMsg = err.detail || errMsg; } catch(e) {}
         throw new Error(errMsg);
     }
-
     return response.json();
 }
 
-// ==================== DATA DATASET ====================
-async function fetchDatasets() {
+async function fetchRaw() {
     try {
-        const datasets = await fetchWithAuth(`${BASE_URL}/datasets/`);
-        return datasets;
+        rawData = await fetchWithAuth(`${BASE_URL}/raw-datasets/`);
     } catch (error) {
         console.error(error);
-        alert("Gagal memuat dataset: " + error.message);
-        return [];
+        alert("Gagal memuat dataset mentah: " + error.message);
+        rawData = [];
     }
 }
 
-// ==================== RENDER DAFTAR DATASET ====================
-function renderFilteredDatasetList() {
-    const input = document.getElementById("searchInput").value.toLowerCase();
-    let datasets = window.allDatasets || [];
+function renderTable() {
+    const searchInput = document.getElementById("searchRaw").value.toLowerCase();
+    let filtered = rawData.filter(ds => ds.name.toLowerCase().includes(searchInput));
 
-    if (input) {
-        datasets = datasets.filter(ds => ds.name.toLowerCase().includes(input));
-    }
+    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE) || 1;
+    if (rawPage > totalPages) rawPage = totalPages;
+    const start = (rawPage - 1) * ITEMS_PER_PAGE;
+    const pageData = filtered.slice(start, start + ITEMS_PER_PAGE);
 
-    // Pagination
-    const totalItems = datasets.length;
-    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
-    if (currentPageList > totalPages) currentPageList = totalPages;
-    if (currentPageList < 1) currentPageList = 1;
-
-    const start = (currentPageList - 1) * ITEMS_PER_PAGE;
-    const end = start + ITEMS_PER_PAGE;
-    const pageDatasets = datasets.slice(start, end);
-
-    const tbody = document.getElementById("listDataset");
+    const tbody = document.getElementById("listRaw");
     tbody.innerHTML = "";
-
-    pageDatasets.forEach((ds, index) => {
-    const row = document.createElement("tr");
-    row.className = "even:bg-gray-50";
-    const noUrut = (currentPageList - 1) * ITEMS_PER_PAGE + index + 1;
-    row.innerHTML = `
-        <td class="p-2 text-center">${noUrut}</td>
-        <td class="p-2 text-center">
-            <span class="nama">${ds.name}</span>
-            <button onclick="renameDataset(${ds.id})" class="ml-2 text-blue-500 hover:text-blue-700" title="Ganti nama">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-            </button>
-        </td>
-        <td class="p-2 text-center">${ds.jumlah_data}</td>
-        <td class="p-2 text-center">${ds.tanggal_upload}</td>
-        <td class="p-2 text-center">
-            <button onclick="tampilDataset(${ds.id})" class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-md mr-1 transition-colors">Lihat</button>
-            <button onclick="hapusDataset(${ds.id})" class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-1 px-3 rounded-md transition-colors">🗑️</button>
-        </td>
-    `;
-    tbody.appendChild(row);
-});
-
-    renderPaginationList(totalPages);
+    pageData.forEach((ds, idx) => {
+        const no = start + idx + 1;
+        const row = document.createElement("tr");
+        row.className = "even:bg-gray-50";
+        row.innerHTML = `
+            <td class="p-2 text-center">${no}</td>
+            <td class="p-2 text-center">
+                <span>${ds.name}</span>
+                <button onclick="renameRaw(${ds.id})" class="ml-2 text-blue-500 hover:text-blue-700">✏️</button>
+            </td>
+            <td class="p-2 text-center">${ds.jumlah_data}</td>
+            <td class="p-2 text-center">${ds.tanggal_upload}</td>
+            <td class="p-2 text-center">
+                <button onclick="lihatDetail(${ds.id})" class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-1 px-3 rounded-md mr-1">Lihat</button>
+                <button onclick="hapusRaw(${ds.id})" class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-1 px-3 rounded-md">🗑️</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+    renderPagination(totalPages);
 }
 
-function renderPaginationList(totalPages) {
-    const container = document.getElementById("paginationList");
+function renderPagination(totalPages) {
+    const container = document.getElementById("paginationRaw");
     container.innerHTML = "";
-
     if (totalPages <= 1) return;
-
-    const prevBtn = document.createElement("button");
-    prevBtn.textContent = "← Sebelumnya";
-    prevBtn.className = "px-3 py-1 border border-gray-300 rounded-md bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed";
-    prevBtn.disabled = currentPageList === 1;
-    prevBtn.onclick = () => {
-        if (currentPageList > 1) {
-            currentPageList--;
-            renderFilteredDatasetList();
-        }
-    };
-
-    const nextBtn = document.createElement("button");
-    nextBtn.textContent = "Berikutnya →";
-    nextBtn.className = "px-3 py-1 border border-gray-300 rounded-md bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed";
-    nextBtn.disabled = currentPageList === totalPages;
-    nextBtn.onclick = () => {
-        if (currentPageList < totalPages) {
-            currentPageList++;
-            renderFilteredDatasetList();
-        }
-    };
-
-    const pageInfo = document.createElement("span");
-    pageInfo.textContent = `Halaman ${currentPageList} dari ${totalPages}`;
-    pageInfo.className = "text-sm text-gray-600";
-
-    container.appendChild(prevBtn);
-    container.appendChild(pageInfo);
-    container.appendChild(nextBtn);
+    const prev = document.createElement("button");
+    prev.textContent = "← Sebelumnya";
+    prev.className = "px-3 py-1 border border-gray-300 rounded-md bg-white hover:bg-gray-100 disabled:opacity-50";
+    prev.disabled = rawPage === 1;
+    prev.onclick = () => { rawPage--; renderTable(); };
+    const next = document.createElement("button");
+    next.textContent = "Berikutnya →";
+    next.className = "px-3 py-1 border border-gray-300 rounded-md bg-white hover:bg-gray-100 disabled:opacity-50";
+    next.disabled = rawPage === totalPages;
+    next.onclick = () => { rawPage++; renderTable(); };
+    const info = document.createElement("span");
+    info.textContent = `Halaman ${rawPage} dari ${totalPages}`;
+    info.className = "text-sm text-gray-600";
+    container.appendChild(prev);
+    container.appendChild(info);
+    container.appendChild(next);
 }
 
-// Pencarian
-function searchDataset() {
-    currentPageList = 1;  // reset ke halaman pertama
-    renderFilteredDatasetList();
-}
-
-// ==================== OPERASI DATASET ====================
-async function renameDataset(id) {
-    const datasets = window.allDatasets || [];
-    const dataset = datasets.find(ds => ds.id === id);
-    if (!dataset) return;
-
-    const newName = prompt("Masukkan nama baru untuk dataset:", dataset.name);
-    if (!newName || newName.trim() === "") return;
-
+async function renameRaw(id) {
+    const ds = rawData.find(d => d.id === id);
+    if (!ds) return;
+    const newName = prompt("Nama baru:", ds.name);
+    if (!newName || !newName.trim()) return;
+    const formData = new FormData();
+    formData.append("name", newName.trim());
     try {
-        const formData = new FormData();
-        formData.append("name", newName.trim());
-        await fetchWithAuth(`${BASE_URL}/datasets/${id}/rename`, {
-            method: "PUT",
-            body: formData
-        });
-        // Refresh data
-        window.allDatasets = await fetchDatasets();
-        renderFilteredDatasetList();
-    } catch (error) {
-        alert("Gagal mengganti nama: " + error.message);
-    }
+        await fetchWithAuth(`${BASE_URL}/raw-datasets/${id}/rename`, { method: "PUT", body: formData });
+        await fetchRaw();
+        renderTable();
+    } catch (error) { alert("Gagal: " + error.message); }
 }
 
-async function hapusDataset(id) {
-    if (!confirm("Yakin ingin menghapus dataset ini?")) return;
-
+async function hapusRaw(id) {
+    if (!confirm("Yakin ingin menghapus?")) return;
     try {
-        await fetchWithAuth(`${BASE_URL}/datasets/${id}`, {
-            method: "DELETE"
-        });
-        if (datasetDetailId === id) {
+        await fetchWithAuth(`${BASE_URL}/raw-datasets/${id}`, { method: "DELETE" });
+        if (detailId === id) {
             document.getElementById("detailDataset").classList.add("hidden");
-            datasetDetailId = null;
+            detailId = null;
         }
-        window.allDatasets = await fetchDatasets();
-        renderFilteredDatasetList();
-    } catch (error) {
-        alert("Gagal menghapus dataset: " + error.message);
-    }
+        await fetchRaw();
+        renderTable();
+    } catch (error) { alert("Gagal: " + error.message); }
 }
 
-async function uploadCSV() {
+async function uploadRaw() {
     const fileInput = document.getElementById("fileCSV");
     const status = document.getElementById("statusUpload");
-
     if (!fileInput.files[0]) {
         status.innerHTML = "⚠️ Pilih file CSV terlebih dahulu";
         status.className = "mt-3 text-sm text-yellow-600";
         return;
     }
-
     const defaultName = fileInput.files[0].name.replace(/\.(csv|xlsx)$/i, "");
     const newName = prompt("Masukkan nama dataset:", defaultName);
-    if (!newName || newName.trim() === "") {
+    if (!newName || !newName.trim()) {
         status.innerHTML = "⚠️ Nama dataset tidak boleh kosong";
         status.className = "mt-3 text-sm text-yellow-600";
         return;
     }
-
     const formData = new FormData();
     formData.append("file", fileInput.files[0]);
     formData.append("name", newName.trim());
-
     status.innerHTML = "⏳ Uploading...";
     status.className = "mt-3 text-sm text-blue-600";
-
     try {
-        await fetchWithAuth(`${BASE_URL}/datasets/upload`, {
-            method: "POST",
-            body: formData
-        });
+        await fetchWithAuth(`${BASE_URL}/raw-datasets/upload`, { method: "POST", body: formData });
         status.innerHTML = `✅ Dataset "${newName.trim()}" berhasil diupload`;
         status.className = "mt-3 text-sm text-green-600";
         fileInput.value = "";
-        window.allDatasets = await fetchDatasets();
-        renderFilteredDatasetList();
+        await fetchRaw();
+        renderTable();
     } catch (error) {
         status.innerHTML = `❌ Gagal upload: ${error.message}`;
         status.className = "mt-3 text-sm text-red-600";
     }
 }
 
-// ==================== DETAIL DATASET ====================
-async function tampilDataset(id) {
-    datasetDetailId = id;
+// Detail
+async function lihatDetail(id) {
+    detailId = id;
+    detailPage = 1;
     document.getElementById("detailDataset").classList.remove("hidden");
-    const dataset = window.allDatasets?.find(ds => ds.id === id);
-    document.getElementById("judulDataset").textContent = `Detail Dataset: ${dataset ? dataset.name : id}`;
-    currentPageDetail = 1;
-    await loadDetailPage();
+    const ds = rawData.find(d => d.id === id);
+    document.getElementById("judulDataset").textContent = `Detail Dataset Mentah: ${ds ? ds.name : id}`;
+    await loadDetail();
 }
-
-async function loadDetailPage() {
-    if (!datasetDetailId) return;
-
+async function loadDetail() {
+    if (!detailId) return;
     try {
-        const data = await fetchWithAuth(
-            `${BASE_URL}/datasets/${datasetDetailId}/items?page=${currentPageDetail}&per_page=${ITEMS_PER_PAGE}`
-        );
-        renderDetailItems(data.items, data.total);
-    } catch (error) {
-        alert("Gagal memuat detail: " + error.message);
-    }
+        const data = await fetchWithAuth(`${BASE_URL}/raw-datasets/${detailId}/items?page=${detailPage}&per_page=${ITEMS_PER_PAGE}`);
+        const tbody = document.getElementById("isiDataset");
+        tbody.innerHTML = "";
+        data.items.forEach(item => {
+            const row = document.createElement("tr");
+            row.className = "even:bg-gray-50";
+            row.innerHTML = `<td class="p-2 text-center">${item.no}</td><td class="p-2">${item.text}</td><td class="p-2 text-center">${item.label ?? "-"}</td>`;
+            tbody.appendChild(row);
+        });
+        const totalPages = Math.ceil(data.total / ITEMS_PER_PAGE) || 1;
+        renderDetailPagination(totalPages);
+    } catch (error) { alert("Gagal memuat detail: " + error.message); }
 }
-
-function renderDetailItems(items, total) {
-    const tbody = document.getElementById("isiDataset");
-    tbody.innerHTML = "";
-
-    const totalPages = Math.ceil(total / ITEMS_PER_PAGE) || 1;
-    if (currentPageDetail > totalPages) currentPageDetail = totalPages;
-
-    items.forEach((item, index) => {
-    const row = document.createElement("tr");
-    row.className = "even:bg-gray-50";
-    const noUrut = (currentPageDetail - 1) * ITEMS_PER_PAGE + index + 1;
-    row.innerHTML = `
-        <td class="p-2 text-center">${noUrut}</td>
-        <td class="p-2">${item.text}</td>
-        <td class="p-2 text-center">${item.label ?? "-"}</td>
-    `;
-    tbody.appendChild(row);
-});
-
-    renderPaginationDetail(totalPages);
-}
-
-function renderPaginationDetail(totalPages) {
+function renderDetailPagination(totalPages) {
     const container = document.getElementById("paginationDetail");
     container.innerHTML = "";
-
     if (totalPages <= 1) return;
-
-    const prevBtn = document.createElement("button");
-    prevBtn.textContent = "← Sebelumnya";
-    prevBtn.className = "px-3 py-1 border border-gray-300 rounded-md bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed";
-    prevBtn.disabled = currentPageDetail === 1;
-    prevBtn.onclick = async () => {
-        if (currentPageDetail > 1) {
-            currentPageDetail--;
-            await loadDetailPage();
-        }
-    };
-
-    const nextBtn = document.createElement("button");
-    nextBtn.textContent = "Berikutnya →";
-    nextBtn.className = "px-3 py-1 border border-gray-300 rounded-md bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed";
-    nextBtn.disabled = currentPageDetail === totalPages;
-    nextBtn.onclick = async () => {
-        if (currentPageDetail < totalPages) {
-            currentPageDetail++;
-            await loadDetailPage();
-        }
-    };
-
-    const pageInfo = document.createElement("span");
-    pageInfo.textContent = `Halaman ${currentPageDetail} dari ${totalPages}`;
-    pageInfo.className = "text-sm text-gray-600";
-
-    container.appendChild(prevBtn);
-    container.appendChild(pageInfo);
-    container.appendChild(nextBtn);
+    const prev = document.createElement("button"); prev.textContent = "← Sebelumnya"; prev.className = "px-3 py-1 border border-gray-300 rounded-md bg-white hover:bg-gray-100 disabled:opacity-50"; prev.disabled = detailPage === 1; prev.onclick = () => { detailPage--; loadDetail(); };
+    const next = document.createElement("button"); next.textContent = "Berikutnya →"; next.className = "px-3 py-1 border border-gray-300 rounded-md bg-white hover:bg-gray-100 disabled:opacity-50"; next.disabled = detailPage === totalPages; next.onclick = () => { detailPage++; loadDetail(); };
+    container.appendChild(prev); container.appendChild(next);
 }
+function closeDetail() { document.getElementById("detailDataset").classList.add("hidden"); detailId = null; }
 
-// ==================== SIDEBAR TOGGLE ====================
 function toggleMenu(menuId) {
     const menus = document.querySelectorAll('.submenu');
-    menus.forEach(menu => {
-        if (menu.id !== menuId) menu.classList.add('hidden');
-    });
-    const current = document.getElementById(menuId);
-    current.classList.toggle('hidden');
+    menus.forEach(menu => { if (menu.id !== menuId) menu.classList.add('hidden'); });
+    document.getElementById(menuId).classList.toggle('hidden');
 }
 
-// ==================== INISIALISASI HALAMAN ====================
-window.onload = async function () {
-    if (!token) {
-        alert("Anda harus login terlebih dahulu.");
-        window.location.href = "login_admin.html";
-        return;
-    }
-
-    window.allDatasets = await fetchDatasets();
-    currentPageList = 1;
-    renderFilteredDatasetList();
+window.onload = async () => {
+    if (!token) { window.location.href = "login_admin.html"; return; }
+    await fetchRaw();
+    renderTable();
 };
 </script>
-
 </body>
 </html>

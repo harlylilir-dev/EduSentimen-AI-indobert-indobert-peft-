@@ -13,7 +13,7 @@ custom_stopwords = {
     "amp", "ampamp", "nya", "yah"
 }
 
-# normalisasi kata
+# normalisasi kata (slang & english -> indonesia baku)
 normalisasi = {
     "yg": "yang",
     "dgn": "dengan",
@@ -36,7 +36,21 @@ normalisasi = {
     "blm": "belum",
     "udah": "sudah",
     "aja": "saja",
-    "bgt": "banget"
+    "bgt": "banget",
+    "and": "dan",
+    "the": "itu",
+    "is": "adalah",
+    "are": "adalah",
+    "in": "di",
+    "on": "pada",
+    "with": "dengan",
+    "for": "untuk",
+    "from": "dari",
+    "not": "tidak",
+    "no": "tidak",
+    "yes": "ya",
+    "good": "bagus",
+    "bad": "buruk",
 }
 
 def clean_text(text):
@@ -54,32 +68,26 @@ def clean_text(text):
     # hapus URL
     text = re.sub(r'https?://\S+', '', text)
 
-    # hapus mention
+    # hapus mention @user
     text = re.sub(r'@\w+', '', text)
 
-    # HASHTAG -> jadi kata (dipisah)
+    # hapus hashtag #contoh
     text = re.sub(r'#\w+', '', text)
 
-    # pisahkan huruf kapital (camel case hashtag)
-    text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)
-
-    # hapus angka (opsional, tapi kita ubah dulu)
+    # hapus angka
     text = re.sub(r'\d+', ' ', text)
 
-    # hapus simbol
+    # hapus semua karakter selain huruf dan spasi (termasuk tanda baca, simbol)
     text = re.sub(r'[^a-z\s]', ' ', text)
 
     # hapus spasi berlebih
     text = re.sub(r'\s+', ' ', text).strip()
 
-    # tokenisasi
+    # tokenisasi & normalisasi kata
     tokens = text.split()
-
-    # NORMALISASI KATA
     tokens = [normalisasi[word] if word in normalisasi else word for word in tokens]
 
     # hapus stopword
     tokens = [word for word in tokens if word not in stopwords]
 
-    # join
     return ' '.join(tokens)
